@@ -1,6 +1,6 @@
 # Vault Cognito Secrets Plugin
 
-Cognito is a secrets engine plugin for [AWS Cognito](https://aws.amazon.com/cognito/).
+Vault Cognito is a secrets engine plugin for [AWS Cognito](https://aws.amazon.com/cognito/).
 
 ## Usage
 
