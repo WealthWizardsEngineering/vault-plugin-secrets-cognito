@@ -13,6 +13,7 @@ import (
 )
 
 type client interface {
+	deleteUser(username string) error
 	getAccessToken(cognitoPoolUrl string, appClientSecret string) (map[string]interface{}, error)
 	getNewUser(region string, clientId string, userPoolId string, group string, dummyEmailDomain string) (map[string]interface{}, error)
 }
@@ -24,6 +25,11 @@ func newClient() (client, error) {
 	p := &clientImpl{}
 
 	return p, nil
+}
+
+func (c *clientImpl) deleteUser(username string) error {
+	// TODO: implement me
+	return nil
 }
 
 // Get an access token

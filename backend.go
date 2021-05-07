@@ -56,6 +56,9 @@ func newBackend() (*cognitoSecretBackend, error) {
 				pathCreds(&b),
 			},
 		),
+		Secrets: []*framework.Secret{
+			secretUser(&b),
+		},
 		BackendType: logical.TypeLogical,
 	}
 

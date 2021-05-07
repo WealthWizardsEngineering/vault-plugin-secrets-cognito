@@ -2,10 +2,24 @@ package cognito
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
 )
+
+const (
+	SecretTypeUser = "user"
+)
+
+func secretUser(b *cognitoSecretBackend) *framework.Secret {
+	return &framework.Secret{
+		Type:   SecretTypeUser,
+		Renew:  b.userRenew,
+		Revoke: b.userRevoke,
+	}
+}
 
 func pathCreds(b *cognitoSecretBackend) *framework.Path {
 	return &framework.Path{
@@ -49,11 +63,12 @@ func (b *cognitoSecretBackend) pathCredsRead(ctx context.Context, req *logical.R
 		if err != nil {
 			return nil, err
 		}
-		// Generate the response
-		resp := &logical.Response{
-			Data: rawData,
+
+		internalData := map[string]interface{}{
+			"username": rawData["username"],
+			"role":     roleName,
 		}
-		return resp, nil
+		return b.Secret(SecretTypeUser).Response(rawData, internalData), nil
 	} else {
 		rawData, err := client.getAccessToken(role.CognitoPoolUrl, role.AppClientSecret)
 		if err != nil {
@@ -67,22 +82,31 @@ func (b *cognitoSecretBackend) pathCredsRead(ctx context.Context, req *logical.R
 	}
 }
 
-func (b *cognitoSecretBackend) spRenew(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *cognitoSecretBackend) userRenew(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 	resp := &logical.Response{Secret: req.Secret}
 
 	return resp, nil
 }
 
-func (b *cognitoSecretBackend) spRevoke(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *cognitoSecretBackend) userRevoke(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 	resp := new(logical.Response)
 
-	return resp, nil
-}
+	usernameRaw, ok := req.Secret.InternalData["username"]
+	if !ok {
+		return nil, errors.New("internal data 'username' not found")
+	}
 
-func (b *cognitoSecretBackend) staticSPRevoke(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	resp := new(logical.Response)
+	username := usernameRaw.(string)
+	b.Logger().Info(fmt.Sprintf("Revoke lease for User: %s", username))
 
-	return resp, nil
+	c, err := b.getClient()
+	if err != nil {
+		return nil, errwrap.Wrapf("error during revoke: {{err}}", err)
+	}
+
+	err = c.deleteUser(username)
+
+	return resp, err
 }
 
 const pathCredsHelpSyn = `

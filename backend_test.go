@@ -12,6 +12,10 @@ import (
 type mockClient struct {
 }
 
+func (c *mockClient) deleteUser(username string) error {
+	return nil
+}
+
 func (c *mockClient) getAccessToken(cognitoPoolUrl, appClientSecret string) (map[string]interface{}, error) {
 
 	rawData := map[string]interface{}{
