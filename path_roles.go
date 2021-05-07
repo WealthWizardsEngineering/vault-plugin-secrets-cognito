@@ -13,11 +13,13 @@ import (
 const (
 	rolesStoragePath = "roles"
 
-	credentialTypeSP = 0
+	credentialTypeAccessToken = "access_token"
+	credentialTypeUser        = "user"
 )
 
 // roleEntry is a Vault role construct that maps to cognito configuration
 type roleEntry struct {
+	CredentialType  string `json:"credential_type"`
 	CognitoPoolUrl  string `json:"cognito_pool_url"`
 	AppClientSecret string `json:"app_client_secret"`
 }
@@ -30,6 +32,10 @@ func pathsRole(b *cognitoSecretBackend) []*framework.Path {
 				"name": {
 					Type:        framework.TypeLowerCaseString,
 					Description: "Name of the role.",
+				},
+				"credential_type": {
+					Type:        framework.TypeString,
+					Description: "credential_type",
 				},
 				"cognito_pool_url": {
 					Type:        framework.TypeString,
@@ -81,7 +87,14 @@ func (b *cognitoSecretBackend) pathRoleUpdate(ctx context.Context, req *logical.
 		if req.Operation == logical.UpdateOperation {
 			return nil, errors.New("role entry not found during update operation")
 		}
-		role = &roleEntry{}
+		role = &roleEntry{
+			CredentialType: credentialTypeAccessToken,
+		}
+	}
+
+	// update and verify credential type if provided
+	if credentialType, ok := d.GetOk("credential_type"); ok {
+		role.CredentialType = credentialType.(string)
 	}
 
 	// update and verify Application Object ID if provided
@@ -116,6 +129,7 @@ func (b *cognitoSecretBackend) pathRoleRead(ctx context.Context, req *logical.Re
 		return nil, nil
 	}
 
+	data["credential_type"] = r.CredentialType
 	data["cognito_pool_url"] = r.CognitoPoolUrl
 	data["app_client_secret"] = r.AppClientSecret
 

@@ -28,6 +28,11 @@ Configure a role:
 %vault write cognito/roles/my-cognito-pool app_client_secret="Basic AAAAAAA" cognito_pool_url="https://my-user-pool.auth.eu-west-1.amazoncognito.com/oauth2/token?grant_type=client_credentials&client_id=111111111"
 ```
 
+Where
+* credential_type: either `access_token` or `user`
+* app_client_secret
+* cognito_pool_url
+
 And get a token from it:
 ```
 % vault read cognito/creds/my-cognito-pool

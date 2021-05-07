@@ -7,27 +7,6 @@ import (
 	"github.com/hashicorp/vault/sdk/logical"
 )
 
-const (
-	SecretTypeSP       = "service_principal"
-	SecretTypeStaticSP = "static_service_principal"
-)
-
-func secretServicePrincipal(b *cognitoSecretBackend) *framework.Secret {
-	return &framework.Secret{
-		Type:   SecretTypeSP,
-		Renew:  b.spRenew,
-		Revoke: b.spRevoke,
-	}
-}
-
-func secretStaticServicePrincipal(b *cognitoSecretBackend) *framework.Secret {
-	return &framework.Secret{
-		Type:   SecretTypeStaticSP,
-		Renew:  b.spRenew,
-		Revoke: b.staticSPRevoke,
-	}
-}
-
 func pathAccessToken(b *cognitoSecretBackend) *framework.Path {
 	return &framework.Path{
 		Pattern: fmt.Sprintf("creds/%s", framework.GenericNameRegex("role")),
@@ -39,7 +18,7 @@ func pathAccessToken(b *cognitoSecretBackend) *framework.Path {
 		},
 		Operations: map[logical.Operation]framework.OperationHandler{
 			logical.ReadOperation: &framework.PathOperation{
-				Callback:                    b.pathSPRead,
+				Callback:                    b.pathAccessTokenRead,
 				ForwardPerformanceSecondary: true,
 				ForwardPerformanceStandby:   true,
 			},
@@ -50,8 +29,8 @@ func pathAccessToken(b *cognitoSecretBackend) *framework.Path {
 	}
 }
 
-// pathSPRead generates cognito credentials based on the role credential type.
-func (b *cognitoSecretBackend) pathSPRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+// pathAccessTokenRead generates cognito access token based on the role credential type.
+func (b *cognitoSecretBackend) pathAccessTokenRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 
 	roleName := d.Get("role").(string)
 
@@ -64,17 +43,20 @@ func (b *cognitoSecretBackend) pathSPRead(ctx context.Context, req *logical.Requ
 		return logical.ErrorResponse(fmt.Sprintf("role '%s' does not exist", roleName)), nil
 	}
 
-	client, _ := b.getClient()
-	rawData, err := client.getAccessToken(role.CognitoPoolUrl, role.AppClientSecret)
-	if err != nil {
-		return nil, err
+	if role.CredentialType == credentialTypeUser {
+		return logical.ErrorResponse("Not implemented"), nil
+	} else {
+		client, _ := b.getClient()
+		rawData, err := client.getAccessToken(role.CognitoPoolUrl, role.AppClientSecret)
+		if err != nil {
+			return nil, err
+		}
+		// Generate the response
+		resp := &logical.Response{
+			Data: rawData,
+		}
+		return resp, nil
 	}
-
-	// Generate the response
-	resp := &logical.Response{
-		Data: rawData,
-	}
-	return resp, nil
 }
 
 func (b *cognitoSecretBackend) spRenew(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {

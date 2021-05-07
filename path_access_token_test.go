@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestSPRead(t *testing.T) {
+func TestAccessTokenRead(t *testing.T) {
 	b, s := getTestBackend(t, true)
 
 	// verify basic cred issuance

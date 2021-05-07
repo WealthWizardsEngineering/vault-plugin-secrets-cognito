@@ -11,32 +11,34 @@ import (
 func TestRoleCreate(t *testing.T) {
 	b, s := getTestBackend(t, true)
 
-	t.Run("SP role", func(t *testing.T) {
-		spRole1 := map[string]interface{}{
+	t.Run("Access Token role", func(t *testing.T) {
+		accessTokenRole1 := map[string]interface{}{
+			"credential_type":   "user",
 			"cognito_pool_url":  "aa",
 			"app_client_secret": "aaa",
 		}
 
-		spRole2 := map[string]interface{}{
+		accessTokenRole2 := map[string]interface{}{
+			"credential_type":   "access_token",
 			"cognito_pool_url":  "bb",
 			"app_client_secret": "bbb",
 		}
 
 		// Verify basic updates of the name role
 		name := generateUUID()
-		testRoleCreate(t, b, s, name, spRole1)
+		testRoleCreate(t, b, s, name, accessTokenRole1)
 
 		resp, err := testRoleRead(t, b, s, name)
 		assertErrorIsNil(t, err)
 
-		equal(t, spRole1, resp.Data)
+		equal(t, accessTokenRole1, resp.Data)
 
-		testRoleCreate(t, b, s, name, spRole2)
+		testRoleCreate(t, b, s, name, accessTokenRole2)
 
 		resp, err = testRoleRead(t, b, s, name)
 		assertErrorIsNil(t, err)
 
-		equal(t, spRole2, resp.Data)
+		equal(t, accessTokenRole2, resp.Data)
 	})
 
 }
