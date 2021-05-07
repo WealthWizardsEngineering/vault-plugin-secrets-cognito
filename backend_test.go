@@ -23,7 +23,7 @@ func (c *mockClient) getAccessToken(cognitoPoolUrl, appClientSecret string) (map
 	return rawData, nil
 }
 
-func (c *mockClient) getNewUser() (map[string]interface{}, error) {
+func (c *mockClient) getNewUser(region string, clientId string, userPoolId string, group string, dummyEmailDomain string) (map[string]interface{}, error) {
 
 	rawData := map[string]interface{}{
 		"username": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",

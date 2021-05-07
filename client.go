@@ -14,7 +14,7 @@ import (
 
 type client interface {
 	getAccessToken(cognitoPoolUrl string, appClientSecret string) (map[string]interface{}, error)
-	getNewUser() (map[string]interface{}, error)
+	getNewUser(region string, clientId string, userPoolId string, group string, dummyEmailDomain string) (map[string]interface{}, error)
 }
 
 type clientImpl struct {
@@ -54,7 +54,7 @@ func (c *clientImpl) getAccessToken(cognitoPoolUrl string, appClientSecret strin
 	return rawData, nil
 }
 
-func (b *clientImpl) getNewUser() (map[string]interface{}, error) {
+func (b *clientImpl) getNewUser(region string, clientId string, userPoolId string, group string, dummyEmailDomain string) (map[string]interface{}, error) {
 
 	// Initial credentials loaded from SDK's default credential chain. Such as
 	// the environment, shared credentials (~/.aws/credentials), or EC2 Instance
@@ -63,17 +63,14 @@ func (b *clientImpl) getNewUser() (map[string]interface{}, error) {
 
 	// Create service client value configured for credentials
 	// from assumed role.
-	cognitoClient := cognitoidentityprovider.New(sess, &aws.Config{Region: aws.String("eu-west-1")})
+	cognitoClient := cognitoidentityprovider.New(sess, &aws.Config{Region: aws.String(region)})
 
 	keyID, err := uuid.GenerateUUID()
 	if err != nil {
 		return nil, errwrap.Wrapf("Could not generate UUID: {{err}}", err)
 	}
 
-	emailID := "vault" + keyID[5:] + "@wealthwizards.io"
-
-	userPoolID := "eu-west-1_hlXkPbbOY"
-
+	emailID := "vault" + keyID[5:] + "@" + dummyEmailDomain
 	password := "pa$$word90123"
 
 	newUserData := &cognitoidentityprovider.AdminCreateUserInput{
@@ -89,7 +86,7 @@ func (b *clientImpl) getNewUser() (map[string]interface{}, error) {
 				Value: aws.String("true"),
 			},
 		},
-		UserPoolId: aws.String(userPoolID),
+		UserPoolId: aws.String(userPoolId),
 		Username:   aws.String(emailID),
 	}
 
@@ -99,8 +96,8 @@ func (b *clientImpl) getNewUser() (map[string]interface{}, error) {
 	}
 
 	addUserToGroupData := &cognitoidentityprovider.AdminAddUserToGroupInput{
-		GroupName:  aws.String("adviser"),
-		UserPoolId: aws.String(userPoolID),
+		GroupName:  aws.String(group),
+		UserPoolId: aws.String(userPoolId),
 		Username:   aws.String(emailID),
 	}
 	_, err = cognitoClient.AdminAddUserToGroup(addUserToGroupData)
@@ -114,8 +111,8 @@ func (b *clientImpl) getNewUser() (map[string]interface{}, error) {
 			"USERNAME": aws.String(emailID),
 			"PASSWORD": aws.String(password),
 		},
-		ClientId:   aws.String("726mt5k78c6hmn0611t2orljle"),
-		UserPoolId: aws.String(userPoolID),
+		ClientId:   aws.String(clientId),
+		UserPoolId: aws.String(userPoolId),
 	}
 	sessionResponse, err := cognitoClient.AdminInitiateAuth(adminInitiateAuthData)
 	if err != nil {
@@ -128,9 +125,9 @@ func (b *clientImpl) getNewUser() (map[string]interface{}, error) {
 			"USERNAME":     aws.String(emailID),
 			"NEW_PASSWORD": aws.String(password),
 		},
-		ClientId:   aws.String("726mt5k78c6hmn0611t2orljle"),
+		ClientId:   aws.String(clientId),
 		Session:    aws.String(*sessionResponse.Session),
-		UserPoolId: aws.String(userPoolID),
+		UserPoolId: aws.String(userPoolId),
 	}
 	//authenticationResult
 	_, err = cognitoClient.AdminRespondToAuthChallenge(adminRespondToAuthChallengeData)

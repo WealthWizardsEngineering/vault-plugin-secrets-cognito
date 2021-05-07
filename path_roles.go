@@ -19,9 +19,14 @@ const (
 
 // roleEntry is a Vault role construct that maps to cognito configuration
 type roleEntry struct {
-	CredentialType  string `json:"credential_type"`
-	CognitoPoolUrl  string `json:"cognito_pool_url"`
-	AppClientSecret string `json:"app_client_secret"`
+	CredentialType   string `json:"credential_type"`
+	CognitoPoolUrl   string `json:"cognito_pool_url"`
+	AppClientSecret  string `json:"app_client_secret"`
+	Region           string `json:"region"`
+	ClientId         string `json:"client_id"`
+	UserPoolId       string `json:"user_pool_id"`
+	Group            string `json:"group"`
+	DummyEmailDomain string `json:"dummy_email_domain"`
 }
 
 func pathsRole(b *cognitoSecretBackend) []*framework.Path {
@@ -44,6 +49,26 @@ func pathsRole(b *cognitoSecretBackend) []*framework.Path {
 				"app_client_secret": {
 					Type:        framework.TypeString,
 					Description: "app_client_secret.",
+				},
+				"region": {
+					Type:        framework.TypeString,
+					Description: "region.",
+				},
+				"client_id": {
+					Type:        framework.TypeString,
+					Description: "client_id.",
+				},
+				"user_pool_id": {
+					Type:        framework.TypeString,
+					Description: "user_pool_id.",
+				},
+				"group": {
+					Type:        framework.TypeString,
+					Description: "group.",
+				},
+				"dummy_email_domain": {
+					Type:        framework.TypeString,
+					Description: "dummy_email_domain.",
 				},
 			},
 			Callbacks: map[logical.Operation]framework.OperationFunc{
@@ -106,6 +131,26 @@ func (b *cognitoSecretBackend) pathRoleUpdate(ctx context.Context, req *logical.
 		role.AppClientSecret = appClientSecret.(string)
 	}
 
+	if region, ok := d.GetOk("region"); ok {
+		role.Region = region.(string)
+	}
+
+	if clientId, ok := d.GetOk("client_id"); ok {
+		role.ClientId = clientId.(string)
+	}
+
+	if userPoolId, ok := d.GetOk("user_pool_id"); ok {
+		role.UserPoolId = userPoolId.(string)
+	}
+
+	if group, ok := d.GetOk("group"); ok {
+		role.Group = group.(string)
+	}
+
+	if dummyEmailDomain, ok := d.GetOk("dummy_email_domain"); ok {
+		role.DummyEmailDomain = dummyEmailDomain.(string)
+	}
+
 	// save role
 	err = saveRole(ctx, req.Storage, role, name)
 	if err != nil {
@@ -130,8 +175,16 @@ func (b *cognitoSecretBackend) pathRoleRead(ctx context.Context, req *logical.Re
 	}
 
 	data["credential_type"] = r.CredentialType
-	data["cognito_pool_url"] = r.CognitoPoolUrl
-	data["app_client_secret"] = r.AppClientSecret
+	if r.CredentialType == credentialTypeUser {
+		data["region"] = r.Region
+		data["client_id"] = r.ClientId
+		data["user_pool_id"] = r.UserPoolId
+		data["group"] = r.Group
+		data["dummy_email_domain"] = r.DummyEmailDomain
+	} else {
+		data["cognito_pool_url"] = r.CognitoPoolUrl
+		data["app_client_secret"] = r.AppClientSecret
+	}
 
 	return &logical.Response{
 		Data: data,
