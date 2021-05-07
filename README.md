@@ -9,23 +9,21 @@ All commands can be run using the provided [Makefile](./Makefile). However, it m
 This will build the plugin binary and start the Vault dev server:
 
 ```
-# Build Cognito plugin and start Vault dev server with plugin automatically registered
 $ make
 ```
 
 Now open a new terminal window and run the following commands:
 
 ```
-# Open a new terminal window and export Vault dev server http address
 $ export VAULT_ADDR='http://127.0.0.1:8200'
 
-# Enable the Cognito plugin
 $ make enable
 ```
 
-Configure a role:
+### Configure a access token role
+
 ```
-%vault write cognito/roles/my-cognito-pool app_client_secret="Basic AAAAAAA" cognito_pool_url="https://my-user-pool.auth.eu-west-1.amazoncognito.com/oauth2/token?grant_type=client_credentials&client_id=111111111"
+$ vault write cognito/roles/my-cognito-pool app_client_secret="Basic AAAAAAA" cognito_pool_url="https://my-user-pool.auth.eu-west-1.amazoncognito.com/oauth2/token?grant_type=client_credentials&client_id=111111111"
 ```
 
 Where
@@ -35,7 +33,7 @@ Where
 
 And get a token from it:
 ```
-% vault read cognito/creds/my-cognito-pool
+$ vault read cognito/creds/my-cognito-access-token
 Key             Value
 ---             -----
 access_token    ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
@@ -43,10 +41,25 @@ expires_in      3600
 token_type      Bearer
 ```
 
+### Configure a user role
+
+```
+$ vault write cognito/roles/my-congito-user credential_type=user region=eu-west-1 client_id=abcdefghijeck user_pool_id=eu-west-1_abcdefg group=mycognitogroup dummy_email_domain=example.com
+```
+
+And get a token from it: 
+
+```
+$ vault read cognito/creds/turo-green-rpp-user 
+Key         Value
+---         -----
+password    somepassword
+username    vaulta87-7e13-8620-0e3e-3c704f8d8b8f@example.com
+```
 ## Tests
 
 Run the tests:
 
 ```
-% make test
+$ make test
 ```
