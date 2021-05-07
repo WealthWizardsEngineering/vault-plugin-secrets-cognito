@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/vault/sdk/logical"
 )
 
-func pathAccessToken(b *cognitoSecretBackend) *framework.Path {
+func pathCreds(b *cognitoSecretBackend) *framework.Path {
 	return &framework.Path{
 		Pattern: fmt.Sprintf("creds/%s", framework.GenericNameRegex("role")),
 		Fields: map[string]*framework.FieldSchema{
@@ -18,19 +18,19 @@ func pathAccessToken(b *cognitoSecretBackend) *framework.Path {
 		},
 		Operations: map[logical.Operation]framework.OperationHandler{
 			logical.ReadOperation: &framework.PathOperation{
-				Callback:                    b.pathAccessTokenRead,
+				Callback:                    b.pathCredsRead,
 				ForwardPerformanceSecondary: true,
 				ForwardPerformanceStandby:   true,
 			},
 		},
 
-		HelpSynopsis:    pathAccessTokenHelpSyn,
-		HelpDescription: pathAccessTokenHelpDesc,
+		HelpSynopsis:    pathCredsHelpSyn,
+		HelpDescription: pathCredsHelpDesc,
 	}
 }
 
-// pathAccessTokenRead generates cognito access token based on the role credential type.
-func (b *cognitoSecretBackend) pathAccessTokenRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+// pathCredsRead generates cognito access token based on the role credential type.
+func (b *cognitoSecretBackend) pathCredsRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 
 	roleName := d.Get("role").(string)
 
@@ -43,10 +43,23 @@ func (b *cognitoSecretBackend) pathAccessTokenRead(ctx context.Context, req *log
 		return logical.ErrorResponse(fmt.Sprintf("role '%s' does not exist", roleName)), nil
 	}
 
+	client, _ := b.getClient()
+	b.Logger().Info(fmt.Sprintf("1 credentialTypeUser: %s", credentialTypeUser))
+	b.Logger().Info(fmt.Sprintf("1 role.CredentialType: %s", role.CredentialType))
 	if role.CredentialType == credentialTypeUser {
-		return logical.ErrorResponse("Not implemented"), nil
+		b.Logger().Info("2")
+
+		rawData, err := client.getNewUser()
+		if err != nil {
+			return nil, err
+		}
+		// Generate the response
+		resp := &logical.Response{
+			Data: rawData,
+		}
+		return resp, nil
 	} else {
-		client, _ := b.getClient()
+		b.Logger().Info("3")
 		rawData, err := client.getAccessToken(role.CognitoPoolUrl, role.AppClientSecret)
 		if err != nil {
 			return nil, err
@@ -77,11 +90,11 @@ func (b *cognitoSecretBackend) staticSPRevoke(ctx context.Context, req *logical.
 	return resp, nil
 }
 
-const pathAccessTokenHelpSyn = `
+const pathCredsHelpSyn = `
 Request Service Principal credentials for a given Vault role.
 `
 
-const pathAccessTokenHelpDesc = `
+const pathCredsHelpDesc = `
 This path creates or updates dynamic Service Principal credentials.
 The associated role can be configured to create a new App/Service Principal,
 or add a new password to an existing App. The Service Principal or password
