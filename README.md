@@ -37,3 +37,11 @@ access_token    dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
 expires_in      3600
 token_type      Bearer
 ```
+
+## Tests
+
+Run the tests:
+
+```
+% make test
+```
