@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
 )
@@ -94,22 +93,31 @@ func (b *cognitoSecretBackend) userRenew(ctx context.Context, req *logical.Reque
 
 func (b *cognitoSecretBackend) userRevoke(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 	resp := new(logical.Response)
-
-	usernameRaw, ok := req.Secret.InternalData["username"]
+	roleRaw, ok := req.Secret.InternalData["role"]
 	if !ok {
-		return nil, errors.New("internal data 'username' not found")
+		return nil, errors.New("internal data 'role' not found")
 	}
 
-	username := usernameRaw.(string)
-	b.Logger().Info(fmt.Sprintf("Revoke lease for User: %s", username))
-
-	c, err := b.getClient()
+	role, err := getRole(ctx, roleRaw.(string), req.Storage)
 	if err != nil {
-		return nil, errwrap.Wrapf("error during revoke: {{err}}", err)
+		return nil, err
 	}
 
-	err = c.deleteUser(username)
+	client, _ := b.getClient()
+	if role.CredentialType == credentialTypeUser {
+		usernameRaw, ok := req.Secret.InternalData["username"]
+		if !ok {
+			return nil, errors.New("internal data 'username' not found")
+		}
 
+		username := usernameRaw.(string)
+		b.Logger().Info(fmt.Sprintf("Revoking lease for User: %s", username))
+
+		err = client.deleteUser(role.Region, role.UserPoolId, username)
+		if err != nil {
+			b.Logger().Error(fmt.Sprintf("Failed to revoke lease for User: %s", username), err)
+		}
+	}
 	return resp, err
 }
 

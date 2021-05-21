@@ -12,7 +12,7 @@ import (
 type mockClient struct {
 }
 
-func (c *mockClient) deleteUser(username string) error {
+func (c *mockClient) deleteUser(region string, userPoolId string, username string) error {
 	return nil
 }
 

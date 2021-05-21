@@ -13,7 +13,7 @@ import (
 )
 
 type client interface {
-	deleteUser(username string) error
+	deleteUser(region string, userPoolId string, username string) error
 	getAccessToken(cognitoPoolUrl string, appClientSecret string) (map[string]interface{}, error)
 	getNewUser(region string, clientId string, userPoolId string, group string, dummyEmailDomain string) (map[string]interface{}, error)
 }
@@ -27,9 +27,22 @@ func newClient() (client, error) {
 	return p, nil
 }
 
-func (c *clientImpl) deleteUser(username string) error {
-	// TODO: implement me
-	return nil
+func (c *clientImpl) deleteUser(region string, userPoolId string, username string) error {
+	// Initial credentials loaded from SDK's default credential chain. Such as
+	// the environment, shared credentials (~/.aws/credentials), or EC2 Instance
+	// Role. These credentials will be used to to make the STS Assume Role API.
+	sess := session.Must(session.NewSession())
+
+	// Create service client value configured for credentials
+	// from assumed role.
+	cognitoClient := cognitoidentityprovider.New(sess, &aws.Config{Region: aws.String(region)})
+	deleteUserData := &cognitoidentityprovider.AdminDeleteUserInput{
+		UserPoolId: aws.String(userPoolId),
+		Username:   aws.String(username),
+	}
+
+	_, err := cognitoClient.AdminDeleteUser(deleteUserData)
+	return err
 }
 
 // Get an access token
@@ -60,7 +73,7 @@ func (c *clientImpl) getAccessToken(cognitoPoolUrl string, appClientSecret strin
 	return rawData, nil
 }
 
-func (b *clientImpl) getNewUser(region string, clientId string, userPoolId string, group string, dummyEmailDomain string) (map[string]interface{}, error) {
+func (c *clientImpl) getNewUser(region string, clientId string, userPoolId string, group string, dummyEmailDomain string) (map[string]interface{}, error) {
 
 	// Initial credentials loaded from SDK's default credential chain. Such as
 	// the environment, shared credentials (~/.aws/credentials), or EC2 Instance
