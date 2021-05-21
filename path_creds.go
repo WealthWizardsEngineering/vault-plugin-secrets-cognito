@@ -86,7 +86,25 @@ func (b *cognitoSecretBackend) pathCredsRead(ctx context.Context, req *logical.R
 }
 
 func (b *cognitoSecretBackend) userRenew(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	roleRaw, ok := req.Secret.InternalData["role"]
+	if !ok {
+		return nil, errors.New("internal data 'role' not found")
+	}
+
+	role, err := getRole(ctx, roleRaw.(string), req.Storage)
+	if err != nil {
+		return nil, err
+	}
+
+	if role == nil {
+		return nil, nil
+	}
+
 	resp := &logical.Response{Secret: req.Secret}
+	if role.CredentialType == credentialTypeUser {
+		resp.Secret.TTL = role.TTL
+		resp.Secret.MaxTTL = role.MaxTTL
+	}
 
 	return resp, nil
 }
