@@ -9,7 +9,9 @@ import (
 	uuid "github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/vault/sdk/helper/jsonutil"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
+	"time"
 )
 
 type client interface {
@@ -90,7 +92,7 @@ func (c *clientImpl) getNewUser(region string, clientId string, userPoolId strin
 	}
 
 	emailID := "vault" + keyID[5:] + "@" + dummyEmailDomain
-	password := "pa$$word90123"
+	password := generatePassword()
 
 	newUserData := &cognitoidentityprovider.AdminCreateUserInput{
 		MessageAction:     aws.String("SUPPRESS"),
@@ -148,18 +150,42 @@ func (c *clientImpl) getNewUser(region string, clientId string, userPoolId strin
 		Session:    aws.String(*sessionResponse.Session),
 		UserPoolId: aws.String(userPoolId),
 	}
-	//authenticationResult
-	_, err = cognitoClient.AdminRespondToAuthChallenge(adminRespondToAuthChallengeData)
+
+	authenticationResult, err := cognitoClient.AdminRespondToAuthChallenge(adminRespondToAuthChallengeData)
 	if err != nil {
 		return nil, errwrap.Wrapf("Could not respond to auth challenge: {{err}}", err)
 	}
 
 	rawData := map[string]interface{}{
-		"username": emailID,
-		"password": password,
-		//			"authenticationResult": authenticationResult,
+		"username":      emailID,
+		"password":      password,
+		"access_token":  aws.String(*authenticationResult.AuthenticationResult.AccessToken),
+		"expires_in":    aws.Int64(*authenticationResult.AuthenticationResult.ExpiresIn),
+		"id_token":      aws.String(*authenticationResult.AuthenticationResult.IdToken),
+		"refresh_token": aws.String(*authenticationResult.AuthenticationResult.RefreshToken),
+		"token_type":    aws.String(*authenticationResult.AuthenticationResult.TokenType),
 	}
 
 	return rawData, nil
+}
 
+func generatePassword() string {
+	rand.Seed(time.Now().UnixNano())
+	digits := "0123456789"
+	specials := "~=+%^*/()[]{}/!@#$?|"
+	all := "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+		"abcdefghijklmnopqrstuvwxyz" +
+		digits + specials
+	length := 32
+	buf := make([]byte, length)
+	buf[0] = digits[rand.Intn(len(digits))]
+	buf[1] = specials[rand.Intn(len(specials))]
+	for i := 2; i < length; i++ {
+		buf[i] = all[rand.Intn(len(all))]
+	}
+	rand.Shuffle(len(buf), func(i, j int) {
+		buf[i], buf[j] = buf[j], buf[i]
+	})
+	str := string(buf) // E.g. "3i[g0|)z"
+	return str
 }
