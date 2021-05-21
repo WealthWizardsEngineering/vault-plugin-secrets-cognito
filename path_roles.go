@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/vault/sdk/framework"
@@ -19,14 +20,16 @@ const (
 
 // roleEntry is a Vault role construct that maps to cognito configuration
 type roleEntry struct {
-	CredentialType   string `json:"credential_type"`
-	CognitoPoolUrl   string `json:"cognito_pool_url"`
-	AppClientSecret  string `json:"app_client_secret"`
-	Region           string `json:"region"`
-	ClientId         string `json:"client_id"`
-	UserPoolId       string `json:"user_pool_id"`
-	Group            string `json:"group"`
-	DummyEmailDomain string `json:"dummy_email_domain"`
+	CredentialType   string        `json:"credential_type"`
+	CognitoPoolUrl   string        `json:"cognito_pool_url"`
+	AppClientSecret  string        `json:"app_client_secret"`
+	Region           string        `json:"region"`
+	ClientId         string        `json:"client_id"`
+	UserPoolId       string        `json:"user_pool_id"`
+	Group            string        `json:"group"`
+	DummyEmailDomain string        `json:"dummy_email_domain"`
+	TTL              time.Duration `json:"ttl"`
+	MaxTTL           time.Duration `json:"max_ttl"`
 }
 
 func pathsRole(b *cognitoSecretBackend) []*framework.Path {
@@ -69,6 +72,14 @@ func pathsRole(b *cognitoSecretBackend) []*framework.Path {
 				"dummy_email_domain": {
 					Type:        framework.TypeString,
 					Description: "dummy_email_domain.",
+				},
+				"ttl": {
+					Type:        framework.TypeDurationSecond,
+					Description: "Default lease for generated credentials. If not set or set to 0, will use system default.",
+				},
+				"max_ttl": {
+					Type:        framework.TypeDurationSecond,
+					Description: "Maximum time a service principal. If not set or set to 0, will use system default.",
 				},
 			},
 			Callbacks: map[logical.Operation]framework.OperationFunc{
@@ -151,6 +162,23 @@ func (b *cognitoSecretBackend) pathRoleUpdate(ctx context.Context, req *logical.
 		role.DummyEmailDomain = dummyEmailDomain.(string)
 	}
 
+	// load and validate TTLs
+	if ttlRaw, ok := d.GetOk("ttl"); ok {
+		role.TTL = time.Duration(ttlRaw.(int)) * time.Second
+	} else if req.Operation == logical.CreateOperation {
+		role.TTL = time.Duration(d.Get("ttl").(int)) * time.Second
+	}
+
+	if maxTTLRaw, ok := d.GetOk("max_ttl"); ok {
+		role.MaxTTL = time.Duration(maxTTLRaw.(int)) * time.Second
+	} else if req.Operation == logical.CreateOperation {
+		role.MaxTTL = time.Duration(d.Get("max_ttl").(int)) * time.Second
+	}
+
+	if role.MaxTTL != 0 && role.TTL > role.MaxTTL {
+		return logical.ErrorResponse("ttl cannot be greater than max_ttl"), nil
+	}
+
 	// save role
 	err = saveRole(ctx, req.Storage, role, name)
 	if err != nil {
@@ -181,6 +209,8 @@ func (b *cognitoSecretBackend) pathRoleRead(ctx context.Context, req *logical.Re
 		data["user_pool_id"] = r.UserPoolId
 		data["group"] = r.Group
 		data["dummy_email_domain"] = r.DummyEmailDomain
+		data["ttl"] = r.TTL / time.Second
+		data["max_ttl"] = r.MaxTTL / time.Second
 	} else {
 		data["cognito_pool_url"] = r.CognitoPoolUrl
 		data["app_client_secret"] = r.AppClientSecret

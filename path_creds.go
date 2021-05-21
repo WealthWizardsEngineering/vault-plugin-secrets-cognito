@@ -68,7 +68,11 @@ func (b *cognitoSecretBackend) pathCredsRead(ctx context.Context, req *logical.R
 			"username": rawData["username"],
 			"role":     roleName,
 		}
-		return b.Secret(SecretTypeUser).Response(rawData, internalData), nil
+		resp := b.Secret(SecretTypeUser).Response(rawData, internalData)
+		resp.Secret.TTL = role.TTL
+		resp.Secret.MaxTTL = role.MaxTTL
+
+		return resp, nil
 	} else {
 		rawData, err := client.getAccessToken(role.CognitoPoolUrl, role.AppClientSecret)
 		if err != nil {

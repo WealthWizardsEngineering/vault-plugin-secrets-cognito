@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/vault/sdk/logical"
 	"sort"
 	"testing"
+	"time"
 )
 
 func TestRoleCreate(t *testing.T) {
@@ -48,6 +49,8 @@ func TestRoleCreate(t *testing.T) {
 			"user_pool_id":       "aaaa",
 			"group":              "aaaaa",
 			"dummy_email_domain": "aaaaaa",
+			"ttl":                int64(0),
+			"max_ttl":            int64(0),
 		}
 
 		userRole2 := map[string]interface{}{
@@ -57,6 +60,8 @@ func TestRoleCreate(t *testing.T) {
 			"user_pool_id":       "bbbb",
 			"group":              "bbbbb",
 			"dummy_email_domain": "bbbbbb",
+			"ttl":                int64(300),
+			"max_ttl":            int64(3000),
 		}
 
 		// Verify basic updates of the name role
@@ -66,6 +71,7 @@ func TestRoleCreate(t *testing.T) {
 		resp, err := testRoleRead(t, b, s, name)
 		assertErrorIsNil(t, err)
 
+		convertRespTypes(resp.Data)
 		equal(t, userRole1, resp.Data)
 
 		testRoleCreate(t, b, s, name, userRole2)
@@ -73,7 +79,79 @@ func TestRoleCreate(t *testing.T) {
 		resp, err = testRoleRead(t, b, s, name)
 		assertErrorIsNil(t, err)
 
+		convertRespTypes(resp.Data)
 		equal(t, userRole2, resp.Data)
+	})
+	t.Run("User Optional role TTLs", func(t *testing.T) {
+		testRole := map[string]interface{}{
+			"credential_type":    "user",
+			"region":             "cc",
+			"client_id":          "ccc",
+			"user_pool_id":       "cccc",
+			"group":              "ccccc",
+			"dummy_email_domain": "cccccc",
+		}
+
+		// Verify that ttl and max_ttl are 0 if not provided
+		name := generateUUID()
+		testRoleCreate(t, b, s, name, testRole)
+
+		testRole["ttl"] = int64(0)
+		testRole["max_ttl"] = int64(0)
+
+		resp, err := testRoleRead(t, b, s, name)
+		assertErrorIsNil(t, err)
+
+		convertRespTypes(resp.Data)
+		equal(t, testRole, resp.Data)
+	})
+
+	t.Run("User Role TTL Checks", func(t *testing.T) {
+		b, s := getTestBackend(t, true)
+
+		const skip = -999
+		tests := []struct {
+			ttl      int64
+			maxTTL   int64
+			expError bool
+		}{
+			{5, 10, false},
+			{5, skip, false},
+			{skip, 10, false},
+			{100, 100, false},
+			{101, 100, true},
+			{101, 0, false},
+		}
+
+		for i, test := range tests {
+			role := map[string]interface{}{
+				"credential_type":    "user",
+				"region":             "cc",
+				"client_id":          "ccc",
+				"user_pool_id":       "cccc",
+				"group":              "ccccc",
+				"dummy_email_domain": "cccccc",
+			}
+
+			if test.ttl != skip {
+				role["ttl"] = test.ttl
+			}
+			if test.maxTTL != skip {
+				role["max_ttl"] = test.maxTTL
+			}
+			name := generateUUID()
+			resp, err := b.HandleRequest(context.Background(), &logical.Request{
+				Operation: logical.CreateOperation,
+				Path:      "roles/" + name,
+				Data:      role,
+				Storage:   s,
+			})
+			assertErrorIsNil(t, err)
+
+			if resp.IsError() != test.expError {
+				t.Fatalf("\ncase %d\nexp error: %t\ngot: %v", i, test.expError, err)
+			}
+		}
 	})
 }
 
@@ -203,4 +281,11 @@ func testRoleRead(t *testing.T, b *cognitoSecretBackend, s logical.Storage, name
 		Path:      fmt.Sprintf("roles/%s", name),
 		Storage:   s,
 	})
+}
+
+// Utility function to convert response types back to the format that is used as
+// input in order to streamline the comparison steps.
+func convertRespTypes(data map[string]interface{}) {
+	data["ttl"] = int64(data["ttl"].(time.Duration))
+	data["max_ttl"] = int64(data["max_ttl"].(time.Duration))
 }
