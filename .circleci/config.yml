@@ -13,12 +13,12 @@ jobs:
           command: make test
       - run: make build
       - store_artifacts:
-          destination: linux
-          path: vault/plugins/vault-plugin-secrets-cognito
+          destination: vault-plugin-secrets-cognito-linux-amd64
+          path: vault/plugins/vault-plugin-secrets-cognito-linux-amd64
       - run: OS=darwin make build
       - store_artifacts:
-          destination: darwin
-          path: vault/plugins/vault-plugin-secrets-cognito
+          destination: vault-plugin-secrets-cognito-darwin-amd64
+          path: vault/plugins/vault-plugin-secrets-cognito-darwin-amd64
       - save_cache:
           key: go-mod-v4-{{ checksum "go.sum" }}
           paths:

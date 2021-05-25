@@ -16,16 +16,16 @@ endif
 all: fmt build start
 
 build:
-	GOOS=$(OS) GOARCH="$(GOARCH)" go build -o vault/plugins/vault-plugin-secrets-cognito cmd/vault-plugin-secrets-cognito/main.go
+	GOOS=$(OS) GOARCH="$(GOARCH)" go build -o vault/plugins/vault-plugin-secrets-cognito-${OS}-${GOARCH} cmd/vault-plugin-secrets-cognito/main.go
 
 start:
 	vault server -dev -dev-root-token-id=root -dev-plugin-dir=./vault/plugins
 
 enable:
-	vault secrets enable -path=cognito vault-plugin-secrets-cognito
+	vault secrets enable -path=cognito vault-plugin-secrets-cognito-${OS}-${GOARCH}
 
 clean:
-	rm -f ./vault/plugins/vault-plugin-secrets-cognito
+	rm -f ./vault/plugins/vault-plugin-secrets-cognito-${OS}-${GOARCH}
 
 fmt:
 	go fmt $$(go list ./...)
