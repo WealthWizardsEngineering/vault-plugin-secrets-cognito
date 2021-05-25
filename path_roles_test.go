@@ -14,15 +14,15 @@ func TestRoleCreate(t *testing.T) {
 
 	t.Run("Client credentials grant role", func(t *testing.T) {
 		clientCredentialGrantRole1 := map[string]interface{}{
-			"credential_type":   "client_credentials_grant",
-			"cognito_pool_url":  "aa",
-			"app_client_secret": "aaa",
+			"credential_type":     "client_credentials_grant",
+			"cognito_pool_domain": "aa",
+			"app_client_secret":   "aaa",
 		}
 
 		clientCredentialGrantRole2 := map[string]interface{}{
-			"credential_type":   "client_credentials_grant",
-			"cognito_pool_url":  "bb",
-			"app_client_secret": "bbb",
+			"credential_type":     "client_credentials_grant",
+			"cognito_pool_domain": "bb",
+			"app_client_secret":   "bbb",
 		}
 
 		// Verify basic updates of the name role
@@ -45,7 +45,7 @@ func TestRoleCreate(t *testing.T) {
 		userRole1 := map[string]interface{}{
 			"credential_type":    "user",
 			"region":             "aa",
-			"client_id":          "aaa",
+			"app_client_id":      "aaa",
 			"user_pool_id":       "aaaa",
 			"group":              "aaaaa",
 			"dummy_email_domain": "aaaaaa",
@@ -56,7 +56,7 @@ func TestRoleCreate(t *testing.T) {
 		userRole2 := map[string]interface{}{
 			"credential_type":    "user",
 			"region":             "bb",
-			"client_id":          "bbb",
+			"app_client_id":      "bbb",
 			"user_pool_id":       "bbbb",
 			"group":              "bbbbb",
 			"dummy_email_domain": "bbbbbb",
@@ -86,7 +86,7 @@ func TestRoleCreate(t *testing.T) {
 		testRole := map[string]interface{}{
 			"credential_type":    "user",
 			"region":             "cc",
-			"client_id":          "ccc",
+			"app_client_id":      "ccc",
 			"user_pool_id":       "cccc",
 			"group":              "ccccc",
 			"dummy_email_domain": "cccccc",
@@ -127,7 +127,7 @@ func TestRoleCreate(t *testing.T) {
 			role := map[string]interface{}{
 				"credential_type":    "user",
 				"region":             "cc",
-				"client_id":          "ccc",
+				"app_client_id":      "ccc",
 				"user_pool_id":       "cccc",
 				"group":              "ccccc",
 				"dummy_email_domain": "cccccc",
@@ -174,7 +174,7 @@ func TestRoleList(t *testing.T) {
 
 	// Add some roles and verify the resulting list
 	role := map[string]interface{}{
-		"cognito_pool_url": "aa",
+		"cognito_pool_domain": "aa",
 	}
 	testRoleCreate(t, b, s, "r1", role)
 	testRoleCreate(t, b, s, "r2", role)
@@ -217,7 +217,7 @@ func TestRoleDelete(t *testing.T) {
 	nameAlt := "test_role_alt"
 
 	role := map[string]interface{}{
-		"cognito_pool_url": "aa",
+		"cognito_pool_domain": "aa",
 	}
 
 	// Create two roles and verify they're present

@@ -17,15 +17,15 @@ const (
 // defaults for roles. The zero value is useful and results in
 // environments variable and system defaults being used.
 type cognitoConfig struct {
-	CognitoPoolUrl  string `json:"cognito_pool_url"`
-	AppClientSecret string `json:"app_client_secret"`
+	CognitoPoolDomain string `json:"cognito_pool_domain"`
+	AppClientSecret   string `json:"app_client_secret"`
 }
 
 func pathConfig(b *cognitoSecretBackend) *framework.Path {
 	return &framework.Path{
 		Pattern: "config",
 		Fields: map[string]*framework.FieldSchema{
-			"cognito_pool_url": &framework.FieldSchema{
+			"cognito_pool_domain": &framework.FieldSchema{
 				Type: framework.TypeString,
 				Description: `The cognito pool url.
 				This value can also be provided with the COGNITO_POOL_URL environment variable.`,
@@ -63,8 +63,8 @@ func (b *cognitoSecretBackend) pathConfigWrite(ctx context.Context, req *logical
 		config = new(cognitoConfig)
 	}
 
-	if cognitoPoolUrl, ok := data.GetOk("cognito_pool_url"); ok {
-		config.CognitoPoolUrl = cognitoPoolUrl.(string)
+	if cognitoPoolDomain, ok := data.GetOk("cognito_pool_domain"); ok {
+		config.CognitoPoolDomain = cognitoPoolDomain.(string)
 	}
 
 	if appClientSecret, ok := data.GetOk("app_client_secret"); ok {
@@ -93,8 +93,8 @@ func (b *cognitoSecretBackend) pathConfigRead(ctx context.Context, req *logical.
 
 	resp := &logical.Response{
 		Data: map[string]interface{}{
-			"cognito_pool_url":  config.CognitoPoolUrl,
-			"app_client_secret": config.AppClientSecret,
+			"cognito_pool_domain": config.CognitoPoolDomain,
+			"app_client_secret":   config.AppClientSecret,
 		},
 	}
 	return resp, nil

@@ -58,7 +58,7 @@ func (b *cognitoSecretBackend) pathCredsRead(ctx context.Context, req *logical.R
 
 	client, _ := b.getClient()
 	if role.CredentialType == credentialTypeUser {
-		rawData, err := client.getNewUser(role.Region, role.ClientId, role.UserPoolId, role.Group, role.DummyEmailDomain)
+		rawData, err := client.getNewUser(role.Region, role.AppClientId, role.UserPoolId, role.Group, role.DummyEmailDomain)
 		if err != nil {
 			return nil, err
 		}
@@ -73,7 +73,7 @@ func (b *cognitoSecretBackend) pathCredsRead(ctx context.Context, req *logical.R
 
 		return resp, nil
 	} else {
-		rawData, err := client.getClientCredentialsGrant(role.CognitoPoolUrl, role.AppClientSecret)
+		rawData, err := client.getClientCredentialsGrant(role.CognitoPoolDomain, role.AppClientId, role.AppClientSecret)
 		if err != nil {
 			return nil, err
 		}

@@ -1,6 +1,7 @@
 package cognito
 
 import (
+	b64 "encoding/base64"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -16,8 +17,8 @@ import (
 
 type client interface {
 	deleteUser(region string, userPoolId string, username string) error
-	getClientCredentialsGrant(cognitoPoolUrl string, appClientSecret string) (map[string]interface{}, error)
-	getNewUser(region string, clientId string, userPoolId string, group string, dummyEmailDomain string) (map[string]interface{}, error)
+	getClientCredentialsGrant(cognitoPoolDomain string, appClientId string, appClientSecret string) (map[string]interface{}, error)
+	getNewUser(region string, appClientId string, userPoolId string, group string, dummyEmailDomain string) (map[string]interface{}, error)
 }
 
 type clientImpl struct {
@@ -47,14 +48,16 @@ func (c *clientImpl) deleteUser(region string, userPoolId string, username strin
 	return err
 }
 
-func (c *clientImpl) getClientCredentialsGrant(cognitoPoolUrl string, appClientSecret string) (map[string]interface{}, error) {
+func (c *clientImpl) getClientCredentialsGrant(cognitoPoolDomain string, appClientId string, appClientSecret string) (map[string]interface{}, error) {
 
 	var rawData map[string]interface{}
 
+	encodedAppClientSecret := b64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", appClientId, appClientSecret)))
+
 	myClient := &http.Client{}
-	postReq, _ := http.NewRequest("POST", cognitoPoolUrl, nil)
+	postReq, _ := http.NewRequest("POST", fmt.Sprintf("https://%s/oauth2/token?grant_type=client_credentials&client_id=%s", cognitoPoolDomain, appClientId), nil)
 	postReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	postReq.Header.Set("Authorization", appClientSecret)
+	postReq.Header.Set("Authorization", fmt.Sprintf("Basic %s", encodedAppClientSecret))
 	postResp, err := myClient.Do(postReq)
 
 	fetchedData, _ := ioutil.ReadAll(postResp.Body)
@@ -74,7 +77,7 @@ func (c *clientImpl) getClientCredentialsGrant(cognitoPoolUrl string, appClientS
 	return rawData, nil
 }
 
-func (c *clientImpl) getNewUser(region string, clientId string, userPoolId string, group string, dummyEmailDomain string) (map[string]interface{}, error) {
+func (c *clientImpl) getNewUser(region string, appClientId string, userPoolId string, group string, dummyEmailDomain string) (map[string]interface{}, error) {
 
 	// Initial credentials loaded from SDK's default credential chain. Such as
 	// the environment, shared credentials (~/.aws/credentials), or EC2 Instance
@@ -131,7 +134,7 @@ func (c *clientImpl) getNewUser(region string, clientId string, userPoolId strin
 			"USERNAME": aws.String(emailID),
 			"PASSWORD": aws.String(password),
 		},
-		ClientId:   aws.String(clientId),
+		ClientId:   aws.String(appClientId),
 		UserPoolId: aws.String(userPoolId),
 	}
 	sessionResponse, err := cognitoClient.AdminInitiateAuth(adminInitiateAuthData)
@@ -145,7 +148,7 @@ func (c *clientImpl) getNewUser(region string, clientId string, userPoolId strin
 			"USERNAME":     aws.String(emailID),
 			"NEW_PASSWORD": aws.String(password),
 		},
-		ClientId:   aws.String(clientId),
+		ClientId:   aws.String(appClientId),
 		Session:    aws.String(*sessionResponse.Session),
 		UserPoolId: aws.String(userPoolId),
 	}

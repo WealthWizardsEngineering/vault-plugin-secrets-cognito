@@ -20,16 +20,16 @@ const (
 
 // roleEntry is a Vault role construct that maps to cognito configuration
 type roleEntry struct {
-	CredentialType   string        `json:"credential_type"`
-	CognitoPoolUrl   string        `json:"cognito_pool_url"`
-	AppClientSecret  string        `json:"app_client_secret"`
-	Region           string        `json:"region"`
-	ClientId         string        `json:"client_id"`
-	UserPoolId       string        `json:"user_pool_id"`
-	Group            string        `json:"group"`
-	DummyEmailDomain string        `json:"dummy_email_domain"`
-	TTL              time.Duration `json:"ttl"`
-	MaxTTL           time.Duration `json:"max_ttl"`
+	CredentialType    string        `json:"credential_type"`
+	CognitoPoolDomain string        `json:"cognito_pool_domain"`
+	AppClientSecret   string        `json:"app_client_secret"`
+	Region            string        `json:"region"`
+	AppClientId       string        `json:"app_client_id"`
+	UserPoolId        string        `json:"user_pool_id"`
+	Group             string        `json:"group"`
+	DummyEmailDomain  string        `json:"dummy_email_domain"`
+	TTL               time.Duration `json:"ttl"`
+	MaxTTL            time.Duration `json:"max_ttl"`
 }
 
 func pathsRole(b *cognitoSecretBackend) []*framework.Path {
@@ -45,9 +45,9 @@ func pathsRole(b *cognitoSecretBackend) []*framework.Path {
 					Type:        framework.TypeString,
 					Description: "credential_type",
 				},
-				"cognito_pool_url": {
+				"cognito_pool_domain": {
 					Type:        framework.TypeString,
-					Description: "cognito_pool_url",
+					Description: "cognito_pool_domain",
 				},
 				"app_client_secret": {
 					Type:        framework.TypeString,
@@ -57,9 +57,9 @@ func pathsRole(b *cognitoSecretBackend) []*framework.Path {
 					Type:        framework.TypeString,
 					Description: "region.",
 				},
-				"client_id": {
+				"app_client_id": {
 					Type:        framework.TypeString,
-					Description: "client_id.",
+					Description: "app_client_id.",
 				},
 				"user_pool_id": {
 					Type:        framework.TypeString,
@@ -134,8 +134,8 @@ func (b *cognitoSecretBackend) pathRoleUpdate(ctx context.Context, req *logical.
 	}
 
 	// update and verify Application Object ID if provided
-	if cognitoPoolUrl, ok := d.GetOk("cognito_pool_url"); ok {
-		role.CognitoPoolUrl = cognitoPoolUrl.(string)
+	if cognitoPoolDomain, ok := d.GetOk("cognito_pool_domain"); ok {
+		role.CognitoPoolDomain = cognitoPoolDomain.(string)
 	}
 
 	if appClientSecret, ok := d.GetOk("app_client_secret"); ok {
@@ -146,8 +146,8 @@ func (b *cognitoSecretBackend) pathRoleUpdate(ctx context.Context, req *logical.
 		role.Region = region.(string)
 	}
 
-	if clientId, ok := d.GetOk("client_id"); ok {
-		role.ClientId = clientId.(string)
+	if appClientId, ok := d.GetOk("app_client_id"); ok {
+		role.AppClientId = appClientId.(string)
 	}
 
 	if userPoolId, ok := d.GetOk("user_pool_id"); ok {
@@ -205,14 +205,14 @@ func (b *cognitoSecretBackend) pathRoleRead(ctx context.Context, req *logical.Re
 	data["credential_type"] = r.CredentialType
 	if r.CredentialType == credentialTypeUser {
 		data["region"] = r.Region
-		data["client_id"] = r.ClientId
+		data["app_client_id"] = r.AppClientId
 		data["user_pool_id"] = r.UserPoolId
 		data["group"] = r.Group
 		data["dummy_email_domain"] = r.DummyEmailDomain
 		data["ttl"] = r.TTL / time.Second
 		data["max_ttl"] = r.MaxTTL / time.Second
 	} else {
-		data["cognito_pool_url"] = r.CognitoPoolUrl
+		data["cognito_pool_domain"] = r.CognitoPoolDomain
 		data["app_client_secret"] = r.AppClientSecret
 	}
 

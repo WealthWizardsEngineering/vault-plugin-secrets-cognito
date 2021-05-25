@@ -13,8 +13,9 @@ func TestClientCredentialsGrantRead(t *testing.T) {
 	t.Run("Client credentials grant role", func(t *testing.T) {
 		name := generateUUID()
 		testRole := map[string]interface{}{
-			"cognito_pool_url":  "my url",
-			"app_client_secret": "my secret",
+			"app_client_id":       "my id",
+			"app_client_secret":   "my secret",
+			"cognito_pool_domain": "my url",
 		}
 		testRoleCreate(t, b, s, name, testRole)
 

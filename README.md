@@ -26,19 +26,22 @@ AWS Cognito provides JWT based authentication and authorisation and can authenti
 database as well as third parties, e.g. via SAML. Cognito can be used in stand along services, but is easily integrated
 with many AWS serverless components, e.g. API gateway, AppSync.
 
-For more information about Cognito read: [What Is Amazon Cognito?](https://docs.aws.amazon.com/cognito/latest/developerguide/what-is-amazon-cognito.html).
+For more information about Cognito
+read: [What Is Amazon Cognito?](https://docs.aws.amazon.com/cognito/latest/developerguide/what-is-amazon-cognito.html).
 
 A Cognito User Pool is a user directory in Amazon Cognito and provides sign in services which authenticates users and
-allows them to get tokens for authorisation, see [Using Tokens with User Pools](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-with-identity-providers.html)
+allows them to get tokens for authorisation,
+see [Using Tokens with User Pools](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-with-identity-providers.html)
 for more details.
 
 In order to interact with Cognito, an App Client is required. This is an entity within a user pool that has permission t
 call unauthenticated API operations, e.g. sign in. To call these API operations you need an app client id and optionally
 a client secret.
 
-As well as providing tokens for a user, an app client can be used to perform machine to machine
-authentication, refered to as [client credential grant](https://aws.amazon.com/blogs/mobile/understanding-amazon-cognito-user-pool-oauth-2-0-grants/).
-A good explanation of Cognito and setting this up is given in this article: [Server to Server Auth with Amazon Cognito
+As well as providing tokens for a user, an app client can be used to perform machine to machine authentication, refered
+to
+as [client credential grant](https://aws.amazon.com/blogs/mobile/understanding-amazon-cognito-user-pool-oauth-2-0-grants/)
+. A good explanation of Cognito and setting this up is given in this article: [Server to Server Auth with Amazon Cognito
 ](https://lobster1234.github.io/2018/05/31/server-to-server-auth-with-amazon-cognito/).
 
 # Installation
@@ -80,7 +83,7 @@ mv vault-plugin-secrets-cognito-<os>-<arch> <plugin_directory>/cognito
 ```
 
 2. If you downloaded it from releases then you may need to change the permissions
-   
+
 ```
 chmod u+x cognito 
 ```
@@ -98,8 +101,8 @@ vault secrets enable -path=cognito cognito
 There are two types of roles that can be configured and is determined by the `credential_type` value in the configured
 role:
 
-1. `client_credentials_grant` - This uses an app client secret to generates an JWT access token that can be used as a bearer access
-   token
+1. `client_credentials_grant` - This uses an app client secret to generates an JWT access token that can be used as a
+   bearer access token
 2. `user` - This creates a user in configured the user pool and returns the username, password and JWT tokens
 
 To create a role:
@@ -115,14 +118,16 @@ The other parameters are defined below for each type.
 Create a role that determines how to get an access token:
 
 ```
-vault write cognito/roles/my-cognito-client-credentials-grant credential_type=client_credentials_grant app_client_secret="Basic AAAAAAA" cognito_pool_url="https://my-user-pool.auth.eu-west-1.amazoncognito.com/oauth2/token?grant_type=client_credentials&client_id=111111111"
+vault write cognito/roles/my-cognito-client-credentials-grant credential_type=client_credentials_grant app_client_id=IIIIII app_client_secret="SSSSSS" cognito_pool_domain="my-user-pool.auth.eu-west-1.amazoncognito.com"
 ```
 
 Where
+
 * credential_type: `client_credentials_grant`
-* app_client_secret: The secret created in your [cognito pool app client](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-client-apps.html)
-* cognito_pool_url: The [token URL endpoint](https://docs.amazonaws.cn/en_us/cognito/latest/developerguide/token-endpoint.html)
-  for the user pool e.g. https://turo-blue-rpp.auth.eu-west-1.amazoncognito.com/oauth2/token?grant_type=client_credentials&client_id=123456789
+* app_client_id: The id of
+  the [cognito pool app client](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-client-apps.html)
+* app_client_secret: The secret created for your app client
+* cognito_pool_domain: The domain for the user pool: e.g. my-user-pool.auth.eu-west-1.amazoncognito.com
 
 ### User role
 
@@ -133,13 +138,14 @@ to be used with your application.
 Create a role that determines how to get a user and associated tokens:
 
 ```
-$ vault write cognito/roles/my-congito-user credential_type=user region=eu-west-1 client_id=abcdefghijeck user_pool_id=eu-west-1_abcdefg group=mycognitogroup dummy_email_domain=example.com
+$ vault write cognito/roles/my-congito-user credential_type=user region=eu-west-1 app_client_id=abcdefghijeck user_pool_id=eu-west-1_abcdefg group=mycognitogroup dummy_email_domain=example.com
 ```
 
 Where
+
 * credential_type: `user`
 * region: The AWS region that your cognito pool exists, e.g. us-east-1
-* client_id: The app client id
+* app_client_id: The app client id
 * user_pool_id: The cognito pool id, e.g. eu-west-1_abcdefg
 * group: The Cognito user group to assign this user to
 * dummy_email_domain: The user will be created using an email address, set the domain to use, it does not need to be a
@@ -154,7 +160,7 @@ been revoked.
 
 Vault requires permissions to manage users in your Cognito User Pool, in order to add.
 
-Example IAM policy: 
+Example IAM policy:
 
 ```
 some policy

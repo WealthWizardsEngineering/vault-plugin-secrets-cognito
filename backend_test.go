@@ -16,7 +16,7 @@ func (c *mockClient) deleteUser(region string, userPoolId string, username strin
 	return nil
 }
 
-func (c *mockClient) getClientCredentialsGrant(cognitoPoolUrl, appClientSecret string) (map[string]interface{}, error) {
+func (c *mockClient) getClientCredentialsGrant(cognitoPoolDomain, appClientId, appClientSecret string) (map[string]interface{}, error) {
 
 	rawData := map[string]interface{}{
 		"access_token": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
@@ -27,7 +27,7 @@ func (c *mockClient) getClientCredentialsGrant(cognitoPoolUrl, appClientSecret s
 	return rawData, nil
 }
 
-func (c *mockClient) getNewUser(region string, clientId string, userPoolId string, group string, dummyEmailDomain string) (map[string]interface{}, error) {
+func (c *mockClient) getNewUser(region string, appClientId string, userPoolId string, group string, dummyEmailDomain string) (map[string]interface{}, error) {
 
 	rawData := map[string]interface{}{
 		"username": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
@@ -61,8 +61,9 @@ func getTestBackend(t *testing.T, initConfig bool) (*cognitoSecretBackend, logic
 
 	if initConfig {
 		cfg := map[string]interface{}{
-			"cognito_pool_url":  "testCognitoPoolUrl",
-			"app_client_secret": "testAppClientSecret",
+			"cognito_pool_domain": "testCognitoPoolDomain",
+			"app_client_id":       "testAppClientId",
+			"app_client_secret":   "testAppClientSecret",
 		}
 
 		testConfigCreate(t, b, config.StorageView, cfg)
