@@ -42,7 +42,7 @@ func pathCreds(b *cognitoSecretBackend) *framework.Path {
 	}
 }
 
-// pathCredsRead generates cognito access token based on the role credential type.
+// pathCredsRead generates cognito access tokens based on the role credential type.
 func (b *cognitoSecretBackend) pathCredsRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 
 	roleName := d.Get("role").(string)
@@ -73,7 +73,7 @@ func (b *cognitoSecretBackend) pathCredsRead(ctx context.Context, req *logical.R
 
 		return resp, nil
 	} else {
-		rawData, err := client.getAccessToken(role.CognitoPoolUrl, role.AppClientSecret)
+		rawData, err := client.getClientCredentialsGrant(role.CognitoPoolUrl, role.AppClientSecret)
 		if err != nil {
 			return nil, err
 		}

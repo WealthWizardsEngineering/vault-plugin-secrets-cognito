@@ -7,10 +7,10 @@ import (
 	"time"
 )
 
-func TestAccessTokenRead(t *testing.T) {
+func TestClientCredentialsGrantRead(t *testing.T) {
 	b, s := getTestBackend(t, true)
 
-	t.Run("Access Token Role", func(t *testing.T) {
+	t.Run("Client credentials grant role", func(t *testing.T) {
 		name := generateUUID()
 		testRole := map[string]interface{}{
 			"cognito_pool_url":  "my url",

@@ -14,8 +14,8 @@ import (
 const (
 	rolesStoragePath = "roles"
 
-	credentialTypeAccessToken = "access_token"
-	credentialTypeUser        = "user"
+	credentialTypeClientCredentialsGrant = "client_credentials_grant"
+	credentialTypeUser                   = "user"
 )
 
 // roleEntry is a Vault role construct that maps to cognito configuration
@@ -124,7 +124,7 @@ func (b *cognitoSecretBackend) pathRoleUpdate(ctx context.Context, req *logical.
 			return nil, errors.New("role entry not found during update operation")
 		}
 		role = &roleEntry{
-			CredentialType: credentialTypeAccessToken,
+			CredentialType: credentialTypeClientCredentialsGrant,
 		}
 	}
 

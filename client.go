@@ -16,7 +16,7 @@ import (
 
 type client interface {
 	deleteUser(region string, userPoolId string, username string) error
-	getAccessToken(cognitoPoolUrl string, appClientSecret string) (map[string]interface{}, error)
+	getClientCredentialsGrant(cognitoPoolUrl string, appClientSecret string) (map[string]interface{}, error)
 	getNewUser(region string, clientId string, userPoolId string, group string, dummyEmailDomain string) (map[string]interface{}, error)
 }
 
@@ -47,8 +47,7 @@ func (c *clientImpl) deleteUser(region string, userPoolId string, username strin
 	return err
 }
 
-// Get an access token
-func (c *clientImpl) getAccessToken(cognitoPoolUrl string, appClientSecret string) (map[string]interface{}, error) {
+func (c *clientImpl) getClientCredentialsGrant(cognitoPoolUrl string, appClientSecret string) (map[string]interface{}, error) {
 
 	var rawData map[string]interface{}
 

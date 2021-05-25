@@ -12,34 +12,34 @@ import (
 func TestRoleCreate(t *testing.T) {
 	b, s := getTestBackend(t, true)
 
-	t.Run("Access Token role", func(t *testing.T) {
-		accessTokenRole1 := map[string]interface{}{
-			"credential_type":   "access_token",
+	t.Run("Client credentials grant role", func(t *testing.T) {
+		clientCredentialGrantRole1 := map[string]interface{}{
+			"credential_type":   "client_credentials_grant",
 			"cognito_pool_url":  "aa",
 			"app_client_secret": "aaa",
 		}
 
-		accessTokenRole2 := map[string]interface{}{
-			"credential_type":   "access_token",
+		clientCredentialGrantRole2 := map[string]interface{}{
+			"credential_type":   "client_credentials_grant",
 			"cognito_pool_url":  "bb",
 			"app_client_secret": "bbb",
 		}
 
 		// Verify basic updates of the name role
 		name := generateUUID()
-		testRoleCreate(t, b, s, name, accessTokenRole1)
+		testRoleCreate(t, b, s, name, clientCredentialGrantRole1)
 
 		resp, err := testRoleRead(t, b, s, name)
 		assertErrorIsNil(t, err)
 
-		equal(t, accessTokenRole1, resp.Data)
+		equal(t, clientCredentialGrantRole1, resp.Data)
 
-		testRoleCreate(t, b, s, name, accessTokenRole2)
+		testRoleCreate(t, b, s, name, clientCredentialGrantRole2)
 
 		resp, err = testRoleRead(t, b, s, name)
 		assertErrorIsNil(t, err)
 
-		equal(t, accessTokenRole2, resp.Data)
+		equal(t, clientCredentialGrantRole2, resp.Data)
 	})
 	t.Run("User role", func(t *testing.T) {
 		userRole1 := map[string]interface{}{

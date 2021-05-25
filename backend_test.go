@@ -16,7 +16,7 @@ func (c *mockClient) deleteUser(region string, userPoolId string, username strin
 	return nil
 }
 
-func (c *mockClient) getAccessToken(cognitoPoolUrl, appClientSecret string) (map[string]interface{}, error) {
+func (c *mockClient) getClientCredentialsGrant(cognitoPoolUrl, appClientSecret string) (map[string]interface{}, error) {
 
 	rawData := map[string]interface{}{
 		"access_token": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",

@@ -98,28 +98,28 @@ vault secrets enable -path=cognito cognito
 There are two types of roles that can be configured and is determined by the `credential_type` value in the configured
 role:
 
-1. `access_token` - This uses an app client secret to generates an JWT access token that can be used as a bearer access
+1. `client_credentials_grant` - This uses an app client secret to generates an JWT access token that can be used as a bearer access
    token
 2. `user` - This creates a user in configured the user pool and returns the username, password and JWT tokens
 
 To create a role:
 
 ```
-vault write cognito/roles/my-cognito-role credential_type=<access_token/user> ...
+vault write cognito/roles/my-cognito-role credential_type=<client_credentials_grant/user> ...
 ```
 
 The other parameters are defined below for each type.
 
-### Access token / client credential grant role
+### Client credential grant role
 
 Create a role that determines how to get an access token:
 
 ```
-vault write cognito/roles/my-cognito-access-token credential_type=access_token app_client_secret="Basic AAAAAAA" cognito_pool_url="https://my-user-pool.auth.eu-west-1.amazoncognito.com/oauth2/token?grant_type=client_credentials&client_id=111111111"
+vault write cognito/roles/my-cognito-client-credentials-grant credential_type=client_credentials_grant app_client_secret="Basic AAAAAAA" cognito_pool_url="https://my-user-pool.auth.eu-west-1.amazoncognito.com/oauth2/token?grant_type=client_credentials&client_id=111111111"
 ```
 
 Where
-* credential_type: `access_token`
+* credential_type: `client_credentials_grant`
 * app_client_secret: The secret created in your [cognito pool app client](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-client-apps.html)
 * cognito_pool_url: The [token URL endpoint](https://docs.amazonaws.cn/en_us/cognito/latest/developerguide/token-endpoint.html)
   for the user pool e.g. https://turo-blue-rpp.auth.eu-west-1.amazoncognito.com/oauth2/token?grant_type=client_credentials&client_id=123456789
@@ -163,10 +163,10 @@ some policy
 
 ## Usage
 
-### Access token / client credential grant role
+### Client credential grant role
 
 ```
-vault read cognito/creds/my-cognito-access-token
+vault read cognito/creds/my-cognito-client-credentials-grant
 Key             Value
 ---             -----
 access_token    ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
