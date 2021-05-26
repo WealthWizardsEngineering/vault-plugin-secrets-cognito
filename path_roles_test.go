@@ -32,14 +32,14 @@ func TestRoleCreate(t *testing.T) {
 		resp, err := testRoleRead(t, b, s, name)
 		assertErrorIsNil(t, err)
 
-		equal(t, clientCredentialGrantRole1, resp.Data)
+		roleEqual(t, clientCredentialGrantRole1, resp.Data)
 
 		testRoleCreate(t, b, s, name, clientCredentialGrantRole2)
 
 		resp, err = testRoleRead(t, b, s, name)
 		assertErrorIsNil(t, err)
 
-		equal(t, clientCredentialGrantRole2, resp.Data)
+		roleEqual(t, clientCredentialGrantRole2, resp.Data)
 	})
 	t.Run("User role", func(t *testing.T) {
 		userRole1 := map[string]interface{}{
@@ -288,4 +288,11 @@ func testRoleRead(t *testing.T, b *cognitoSecretBackend, s logical.Storage, name
 func convertRespTypes(data map[string]interface{}) {
 	data["ttl"] = int64(data["ttl"].(time.Duration))
 	data["max_ttl"] = int64(data["max_ttl"].(time.Duration))
+}
+
+// equal tests for roles to ignore secret fields
+func roleEqual(tb testing.TB, exp, act map[string]interface{}) {
+	delete(exp, "app_client_secret")
+	delete(act, "app_client_secret")
+	equal(tb, exp, act)
 }

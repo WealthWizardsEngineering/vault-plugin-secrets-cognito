@@ -213,7 +213,6 @@ func (b *cognitoSecretBackend) pathRoleRead(ctx context.Context, req *logical.Re
 		data["max_ttl"] = r.MaxTTL / time.Second
 	} else {
 		data["cognito_pool_domain"] = r.CognitoPoolDomain
-		data["app_client_secret"] = r.AppClientSecret
 	}
 
 	return &logical.Response{
