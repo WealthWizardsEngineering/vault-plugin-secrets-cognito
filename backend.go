@@ -15,8 +15,8 @@ import (
 type cognitoSecretBackend struct {
 	*framework.Backend
 
-	getClient func() (client, error)
-	lock      sync.RWMutex
+	client client
+	lock   sync.RWMutex
 }
 
 var _ logical.Factory = Factory
@@ -62,9 +62,31 @@ func newBackend() (*cognitoSecretBackend, error) {
 		BackendType: logical.TypeLogical,
 	}
 
-	b.getClient = newClient
-
 	return &b, nil
+}
+
+func (b *cognitoSecretBackend) getClient() (client, error) {
+	b.lock.RLock()
+	unlockFunc := b.lock.RUnlock
+	defer func() { unlockFunc() }()
+
+	if b.client != nil {
+		return b.client, nil
+	}
+
+	b.lock.RUnlock()
+	b.lock.Lock()
+	unlockFunc = b.lock.Unlock
+
+	if b.client != nil {
+		return b.client, nil
+	}
+
+	c := &clientImpl{}
+
+	b.client = c
+
+	return c, nil
 }
 
 // reset clears the backend's cached client
@@ -74,8 +96,7 @@ func (b *cognitoSecretBackend) reset() {
 	b.lock.Lock()
 	defer b.lock.Unlock()
 
-	//b.settings = nil
-	//b.client = nil
+	b.client = nil
 }
 
 func (b *cognitoSecretBackend) handleExistenceCheck(ctx context.Context, req *logical.Request, data *framework.FieldData) (bool, error) {

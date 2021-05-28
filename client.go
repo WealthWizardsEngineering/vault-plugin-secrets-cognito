@@ -24,12 +24,6 @@ type client interface {
 type clientImpl struct {
 }
 
-func newClient() (client, error) {
-	p := &clientImpl{}
-
-	return p, nil
-}
-
 func (c *clientImpl) deleteUser(region string, userPoolId string, username string) error {
 	// Initial credentials loaded from SDK's default credential chain. Such as
 	// the environment, shared credentials (~/.aws/credentials), or EC2 Instance
@@ -79,10 +73,12 @@ func (c *clientImpl) getClientCredentialsGrant(cognitoPoolDomain string, appClie
 
 func (c *clientImpl) getNewUser(region string, appClientId string, userPoolId string, group string, dummyEmailDomain string) (map[string]interface{}, error) {
 
+	config := aws.NewConfig()
+
 	// Initial credentials loaded from SDK's default credential chain. Such as
 	// the environment, shared credentials (~/.aws/credentials), or EC2 Instance
 	// Role. These credentials will be used to to make the STS Assume Role API.
-	sess := session.Must(session.NewSession())
+	sess := session.Must(session.NewSession(config))
 
 	// Create service client value configured for credentials
 	// from assumed role.

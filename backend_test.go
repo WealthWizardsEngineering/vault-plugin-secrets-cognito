@@ -37,10 +37,6 @@ func (c *mockClient) getNewUser(region string, appClientId string, userPoolId st
 	return rawData, nil
 }
 
-func newMockClient() *mockClient {
-	return &mockClient{}
-}
-
 func getTestBackend(t *testing.T, initConfig bool) (*cognitoSecretBackend, logical.Storage) {
 	b, _ := newBackend()
 
@@ -54,11 +50,6 @@ func getTestBackend(t *testing.T, initConfig bool) (*cognitoSecretBackend, logic
 		t.Fatalf("unable to create backend: %v", err)
 	}
 
-	mockClient := newMockClient()
-	b.getClient = func() (client, error) {
-		return mockClient, nil
-	}
-
 	if initConfig {
 		cfg := map[string]interface{}{
 			"cognito_pool_domain": "testCognitoPoolDomain",
@@ -69,5 +60,13 @@ func getTestBackend(t *testing.T, initConfig bool) (*cognitoSecretBackend, logic
 		testConfigCreate(t, b, config.StorageView, cfg)
 	}
 
+	b.client, _ = getMockClient()
+
 	return b, config.StorageView
+}
+func getMockClient() (client, error) {
+
+	c := &mockClient{}
+
+	return c, nil
 }
