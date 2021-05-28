@@ -17,23 +17,26 @@ const (
 // defaults for roles. The zero value is useful and results in
 // environments variable and system defaults being used.
 type cognitoConfig struct {
-	CognitoPoolDomain string `json:"cognito_pool_domain"`
-	AppClientSecret   string `json:"app_client_secret"`
+	AwsAccessKeyId     string `json:"aws_access_key_id"`
+	AwsSecretAccessKey string `json:"aws_secret_access_key"`
+	AwsSessionToken    string `json:"aws_session_token"`
 }
 
 func pathConfig(b *cognitoSecretBackend) *framework.Path {
 	return &framework.Path{
 		Pattern: "config",
 		Fields: map[string]*framework.FieldSchema{
-			"cognito_pool_domain": &framework.FieldSchema{
-				Type: framework.TypeString,
-				Description: `The cognito pool url.
-				This value can also be provided with the COGNITO_POOL_URL environment variable.`,
+			"aws_access_key_id": &framework.FieldSchema{
+				Type:        framework.TypeString,
+				Description: `The AWS access key for accessing the AWS API (Optional).`,
 			},
-			"app_client_secret": &framework.FieldSchema{
-				Type: framework.TypeString,
-				Description: `The app client secret for the Cognito User Pool. This value can also
-				be provided with the APP_CLIENT_SECRET environment variable.`,
+			"aws_secret_access_key": &framework.FieldSchema{
+				Type:        framework.TypeString,
+				Description: `The AWS secret  access key for accessing the AWS API (Optional).`,
+			},
+			"aws_session_token": &framework.FieldSchema{
+				Type:        framework.TypeString,
+				Description: `The AWS session token for accessing the AWS API (Optional).`,
 			},
 		},
 		Callbacks: map[logical.Operation]framework.OperationFunc{
@@ -63,12 +66,16 @@ func (b *cognitoSecretBackend) pathConfigWrite(ctx context.Context, req *logical
 		config = new(cognitoConfig)
 	}
 
-	if cognitoPoolDomain, ok := data.GetOk("cognito_pool_domain"); ok {
-		config.CognitoPoolDomain = cognitoPoolDomain.(string)
+	if awsAccessKeyId, ok := data.GetOk("aws_access_key_id"); ok {
+		config.AwsAccessKeyId = awsAccessKeyId.(string)
 	}
 
-	if appClientSecret, ok := data.GetOk("app_client_secret"); ok {
-		config.AppClientSecret = appClientSecret.(string)
+	if awsSecretAccessKey, ok := data.GetOk("aws_secret_access_key"); ok {
+		config.AwsSecretAccessKey = awsSecretAccessKey.(string)
+	}
+
+	if awsSessionToken, ok := data.GetOk("aws_session_token"); ok {
+		config.AwsSessionToken = awsSessionToken.(string)
 	}
 
 	if merr.ErrorOrNil() != nil {
@@ -93,8 +100,9 @@ func (b *cognitoSecretBackend) pathConfigRead(ctx context.Context, req *logical.
 
 	resp := &logical.Response{
 		Data: map[string]interface{}{
-			"cognito_pool_domain": config.CognitoPoolDomain,
-			"app_client_secret":   config.AppClientSecret,
+			"aws_access_key_id":     config.AwsAccessKeyId,
+			"aws_secret_access_key": config.AwsSecretAccessKey,
+			"aws_session_token":     config.AwsSessionToken,
 		},
 	}
 	return resp, nil
@@ -158,7 +166,5 @@ func (b *cognitoSecretBackend) saveConfig(ctx context.Context, config *cognitoCo
 
 const confHelpSyn = `Configure the Cognito Secret backend.`
 const confHelpDesc = `
-The Cognito secret backend requires credentials for managing applications and
-service principals. This endpoint is used to configure those credentials as
-well as default values for the backend in general.
+The Cognito secret backend requires AWS credentials for managing users in the a user pool.
 `

@@ -65,7 +65,7 @@ func newBackend() (*cognitoSecretBackend, error) {
 	return &b, nil
 }
 
-func (b *cognitoSecretBackend) getClient() (client, error) {
+func (b *cognitoSecretBackend) getClient(ctx context.Context, req *logical.Request) (client, error) {
 	b.lock.RLock()
 	unlockFunc := b.lock.RUnlock
 	defer func() { unlockFunc() }()
@@ -82,7 +82,13 @@ func (b *cognitoSecretBackend) getClient() (client, error) {
 		return b.client, nil
 	}
 
-	c := &clientImpl{}
+	config, _ := b.getConfig(ctx, req.Storage)
+	fmt.Sprintf("Config: %s", config)
+	c := &clientImpl{
+		AwsAccessKeyId:     config.AwsAccessKeyId,
+		AwsSecretAccessKey: config.AwsSecretAccessKey,
+		AwsSessionToken:    config.AwsSessionToken,
+	}
 
 	b.client = c
 

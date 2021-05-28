@@ -141,7 +141,7 @@ Create a role that determines how to get a user and associated tokens:
 $ vault write cognito/roles/my-congito-user credential_type=user region=eu-west-1 app_client_id=abcdefghijeck user_pool_id=eu-west-1_abcdefg group=mycognitogroup dummy_email_domain=example.com
 ```
 
-Where
+Where:
 
 * credential_type: `user`
 * region: The AWS region that your cognito pool exists, e.g. us-east-1
@@ -158,14 +158,46 @@ been revoked.
 
 #### AWS configuration
 
-Vault requires permissions to manage users in your Cognito User Pool, in order to add.
+Vault requires permissions to manage users in your Cognito User Pool, in order to add and delete users. This is not
+required for client credentials grant role as this uses the app client secret in the role definition.
 
-Example IAM policy:
+This plugin uses the AWS SDK for go and can be configured explicity by writing config or via other options like
+environment variables,
+see [Configuring the AWS SDK for Go](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html)
+for details.
+
+Vault requires permissions to your cognito user pools, this is an example IAM policy to achive this:
 
 ```
-some policy
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "cognito-idp:AdminDeleteUser",
+                "cognito-idp:AdminInitiateAuth",
+                "cognito-idp:AdminCreateUser",
+                "cognito-idp:AdminAddUserToGroup",
+                "cognito-idp:AdminRespondToAuthChallenge"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
+
+To set AWS credentials on this secrets backend write to config:
 
 ```
+vault write cognito/config aws_access_key_id=AAAA aws_secret_access_key=BBBB aws_session_token=CCCC
+```
+
+Where:
+
+* aws_access_key_id: The AWS access key to use
+* aws_secret_access_key: The AWS secret access key to use
+* aws_session_token: The AWS session token to use (if required)
 
 ## Usage
 

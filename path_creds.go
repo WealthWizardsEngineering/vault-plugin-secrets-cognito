@@ -56,7 +56,7 @@ func (b *cognitoSecretBackend) pathCredsRead(ctx context.Context, req *logical.R
 		return logical.ErrorResponse(fmt.Sprintf("role '%s' does not exist", roleName)), nil
 	}
 
-	client, _ := b.getClient()
+	client, _ := b.getClient(ctx, req)
 	if role.CredentialType == credentialTypeUser {
 		rawData, err := client.getNewUser(role.Region, role.AppClientId, role.UserPoolId, role.Group, role.DummyEmailDomain)
 		if err != nil {
@@ -121,7 +121,7 @@ func (b *cognitoSecretBackend) userRevoke(ctx context.Context, req *logical.Requ
 		return nil, err
 	}
 
-	client, _ := b.getClient()
+	client, _ := b.getClient(ctx, req)
 	if role.CredentialType == credentialTypeUser {
 		usernameRaw, ok := req.Secret.InternalData["username"]
 		if !ok {

@@ -4,6 +4,7 @@ import (
 	b64 "encoding/base64"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/errwrap"
@@ -22,13 +23,22 @@ type client interface {
 }
 
 type clientImpl struct {
+	AwsAccessKeyId     string
+	AwsSecretAccessKey string
+	AwsSessionToken    string
 }
 
 func (c *clientImpl) deleteUser(region string, userPoolId string, username string) error {
+	config := aws.NewConfig()
+
+	if c.AwsAccessKeyId != "" {
+		creds := credentials.NewStaticCredentials(c.AwsAccessKeyId, c.AwsSecretAccessKey, c.AwsSessionToken)
+		config = config.WithCredentials(creds)
+	}
 	// Initial credentials loaded from SDK's default credential chain. Such as
 	// the environment, shared credentials (~/.aws/credentials), or EC2 Instance
 	// Role. These credentials will be used to to make the STS Assume Role API.
-	sess := session.Must(session.NewSession())
+	sess := session.Must(session.NewSession(config))
 
 	// Create service client value configured for credentials
 	// from assumed role.
@@ -75,6 +85,10 @@ func (c *clientImpl) getNewUser(region string, appClientId string, userPoolId st
 
 	config := aws.NewConfig()
 
+	if c.AwsAccessKeyId != "" {
+		creds := credentials.NewStaticCredentials(c.AwsAccessKeyId, c.AwsSecretAccessKey, c.AwsSessionToken)
+		config = config.WithCredentials(creds)
+	}
 	// Initial credentials loaded from SDK's default credential chain. Such as
 	// the environment, shared credentials (~/.aws/credentials), or EC2 Instance
 	// Role. These credentials will be used to to make the STS Assume Role API.
