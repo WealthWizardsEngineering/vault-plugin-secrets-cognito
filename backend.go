@@ -115,5 +115,5 @@ func (b *cognitoSecretBackend) handleExistenceCheck(ctx context.Context, req *lo
 }
 
 const cognitoHelp = `
-The Cognito backend is a secrets backend for AWS Cognito.
+The cognito backend is a secrets backend for AWS generating credentials for an AWS Cognito user pool.
 `

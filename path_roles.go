@@ -43,43 +43,43 @@ func pathsRole(b *cognitoSecretBackend) []*framework.Path {
 				},
 				"credential_type": {
 					Type:        framework.TypeString,
-					Description: "credential_type",
-				},
-				"cognito_pool_domain": {
-					Type:        framework.TypeString,
-					Description: "cognito_pool_domain",
-				},
-				"app_client_secret": {
-					Type:        framework.TypeString,
-					Description: "app_client_secret.",
-				},
-				"region": {
-					Type:        framework.TypeString,
-					Description: "region.",
+					Description: fmt.Sprintf("The credential type, either %s or %s", credentialTypeClientCredentialsGrant, credentialTypeUser),
 				},
 				"app_client_id": {
 					Type:        framework.TypeString,
-					Description: "app_client_id.",
+					Description: fmt.Sprintf("The app client id (for both %s and %s)", credentialTypeClientCredentialsGrant, credentialTypeUser),
+				},
+				"cognito_pool_domain": {
+					Type:        framework.TypeString,
+					Description: fmt.Sprintf("The cognito user pool domain name (for %s)", credentialTypeClientCredentialsGrant),
+				},
+				"app_client_secret": {
+					Type:        framework.TypeString,
+					Description: fmt.Sprintf("The app client secret (for %s)", credentialTypeClientCredentialsGrant),
+				},
+				"region": {
+					Type:        framework.TypeString,
+					Description: fmt.Sprintf("The region that the Cognito user pool is defined in (for %s)", credentialTypeUser),
 				},
 				"user_pool_id": {
 					Type:        framework.TypeString,
-					Description: "user_pool_id.",
+					Description: fmt.Sprintf("The user pool id (for %s)", credentialTypeUser),
 				},
 				"group": {
 					Type:        framework.TypeString,
-					Description: "group.",
+					Description: fmt.Sprintf("The group to add the created user to (for %s)", credentialTypeUser),
 				},
 				"dummy_email_domain": {
 					Type:        framework.TypeString,
-					Description: "dummy_email_domain.",
+					Description: fmt.Sprintf("A dummy email domain used in the username when creating a user (for %s)", credentialTypeUser),
 				},
 				"ttl": {
 					Type:        framework.TypeDurationSecond,
-					Description: "Default lease for generated credentials. If not set or set to 0, will use system default.",
+					Description: fmt.Sprintf("Default lease for generated credentials. If not set or set to 0, will use system default (for %s)", credentialTypeUser),
 				},
 				"max_ttl": {
 					Type:        framework.TypeDurationSecond,
-					Description: "Maximum time a service principal. If not set or set to 0, will use system default.",
+					Description: fmt.Sprintf("Maximum time a service principal. If not set or set to 0, will use system default (for %s)", credentialTypeUser),
 				},
 			},
 			Callbacks: map[logical.Operation]framework.OperationFunc{

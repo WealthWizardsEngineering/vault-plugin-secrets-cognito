@@ -40,7 +40,6 @@ func pathConfig(b *cognitoSecretBackend) *framework.Path {
 			},
 		},
 		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.ReadOperation:   b.pathConfigRead,
 			logical.CreateOperation: b.pathConfigWrite,
 			logical.UpdateOperation: b.pathConfigWrite,
 			logical.DeleteOperation: b.pathConfigDelete,
@@ -85,27 +84,6 @@ func (b *cognitoSecretBackend) pathConfigWrite(ctx context.Context, req *logical
 	err = b.saveConfig(ctx, config, req.Storage)
 
 	return nil, err
-}
-
-func (b *cognitoSecretBackend) pathConfigRead(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
-	config, err := b.getConfig(ctx, req.Storage)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if config == nil {
-		config = new(cognitoConfig)
-	}
-
-	resp := &logical.Response{
-		Data: map[string]interface{}{
-			"aws_access_key_id":     config.AwsAccessKeyId,
-			"aws_secret_access_key": config.AwsSecretAccessKey,
-			"aws_session_token":     config.AwsSessionToken,
-		},
-	}
-	return resp, nil
 }
 
 func (b *cognitoSecretBackend) pathConfigDelete(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {

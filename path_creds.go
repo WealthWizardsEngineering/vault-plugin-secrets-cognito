@@ -140,12 +140,14 @@ func (b *cognitoSecretBackend) userRevoke(ctx context.Context, req *logical.Requ
 }
 
 const pathCredsHelpSyn = `
-Request Service Principal credentials for a given Vault role.
+Request Cognito user pool credentials for a given Vault role.
 `
 
 const pathCredsHelpDesc = `
-This path creates or updates dynamic Service Principal credentials.
-The associated role can be configured to create a new App/Service Principal,
-or add a new password to an existing App. The Service Principal or password
-will be automatically deleted when the lease has expired.
+This path creates credentials for the configured user pool.
+The associated role can be configured to create either a user or
+request an client credentials grant access token,
+The user will be automatically deleted when the lease has expired.
+The client credentials grant access token will only be valid for
+the time configured in the app client. 
 `
