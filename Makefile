@@ -19,7 +19,7 @@ build:
 	GOOS=$(OS) GOARCH="$(GOARCH)" CGO_ENABLED=0 go build -o vault/plugins/vault-plugin-secrets-cognito-${OS}-${GOARCH} cmd/vault-plugin-secrets-cognito/main.go
 
 start:
-	vault server -dev -dev-root-token-id=root -dev-plugin-dir=./vault/plugins
+	vault server -dev -dev-root-token-id=root -dev-plugin-dir=./vault/plugins -log-level=trace
 
 enable:
 	vault secrets enable -path=cognito vault-plugin-secrets-cognito-${OS}-${GOARCH}

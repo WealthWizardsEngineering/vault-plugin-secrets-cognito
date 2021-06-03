@@ -83,16 +83,20 @@ func (b *cognitoSecretBackend) getClient(ctx context.Context, req *logical.Reque
 	}
 
 	config, _ := b.getConfig(ctx, req.Storage)
-	fmt.Sprintf("Config: %s", config)
-	c := &clientImpl{
-		AwsAccessKeyId:     config.AwsAccessKeyId,
-		AwsSecretAccessKey: config.AwsSecretAccessKey,
-		AwsSessionToken:    config.AwsSessionToken,
+
+	if config != nil {
+		c := &clientImpl{
+			AwsAccessKeyId:     config.AwsAccessKeyId,
+			AwsSecretAccessKey: config.AwsSecretAccessKey,
+			AwsSessionToken:    config.AwsSessionToken,
+		}
+		b.client = c
+		return c, nil
+	} else {
+		c := &clientImpl{}
+		b.client = c
+		return c, nil
 	}
-
-	b.client = c
-
-	return c, nil
 }
 
 // reset clears the backend's cached client
