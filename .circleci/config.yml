@@ -12,13 +12,18 @@ jobs:
           name: Run unit tests
           command: make test
       - run: make build
+      - run: sha256sum vault/plugins/vault-plugin-secrets-cognito-linux-amd64 > vault/plugins/checksums.txt
       - store_artifacts:
           destination: vault-plugin-secrets-cognito-linux-amd64
           path: vault/plugins/vault-plugin-secrets-cognito-linux-amd64
       - run: OS=darwin make build
+      - run: sha256sum vault/plugins/vault-plugin-secrets-cognito-darwin-amd64 >> vault/plugins/checksums.txt
       - store_artifacts:
           destination: vault-plugin-secrets-cognito-darwin-amd64
           path: vault/plugins/vault-plugin-secrets-cognito-darwin-amd64
+      - store_artifacts:
+          destination: checksums.txt
+          path: vault/plugins/checksums.txt
       - save_cache:
           key: go-mod-v4-{{ checksum "go.sum" }}
           paths:
