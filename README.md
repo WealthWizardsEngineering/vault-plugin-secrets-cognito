@@ -50,7 +50,8 @@ To begin plugin installation, either download a release or build from source for
 
 ## From release
 
-Always download the latest stable release from the releases section.
+Always download the latest
+stable [release from github](https://github.com/WealthWizardsEngineering/vault-plugin-secrets-cognito/releases).
 
 ## From source
 
@@ -88,7 +89,22 @@ mv vault-plugin-secrets-cognito-<os>-<arch> <plugin_directory>/cognito
 chmod u+x cognito 
 ```
 
-3. Enable the secrets backend
+3. Register the plugin
+
+Get the checksum from checksums.txt corresponding to downloaded release binary.
+
+Or get it from the locally built binary, e.g `sha256sum <compiled_binary>`.
+
+Insert the checksum into the following command:
+
+```
+vault write sys/plugins/catalog/secret/cognito \
+type=secret \
+sha256=<checksum> \
+command="cognito"
+```
+
+4. Enable the secrets backend
 
 ```
 vault secrets enable -path=cognito cognito
@@ -218,7 +234,9 @@ Vault or cognito as there is no accompanying refresh token. However, it's trivia
 You can then use the token for Bearer authentication as part of a http requests by setting the `Authorization`
 header.
 
-`curl --location --request GET 'https://my-api.example.com' --header 'Authorization: ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd'`
+```
+curl --location --request GET 'https://my-api.example.com' --header 'Authorization: ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd'
+```
 
 ### User role
 
@@ -275,8 +293,16 @@ $ make test
 
 ## CircleCI
 
-CircleCI builds and tests thie project. Aretfacts are created on each build and made available.
+CircleCI builds and tests this project. Artefacts are created on each build and made available as part of the build.
 
 ## Releasing
 
-Artefacts from CircleCI can be uploaded to GitHub as releases to this repository.
+To release the project:
+
+1. [Create a new release in the GitHub project](https://github.com/WealthWizardsEngineering/vault-plugin-secrets-cognito/releases/new)
+2. Set the Tag version and Release title to the next semantic verion for the next release, e.g. `v.0.0.2`
+3. Enter a brief description of the changes included in this release
+4. Download the two binaries and the checksums.txt file from the CicleCi build correspinding to the latest commit that
+   we're tagging and upload them to the GitHub release
+5. Click publish release
+
