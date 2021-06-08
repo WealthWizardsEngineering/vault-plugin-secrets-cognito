@@ -77,19 +77,19 @@ OS=darwin make build
 
 ## Vault setup
 
-1. Move the desired plugin binary into your Vault's configured `plugin_directory`.
+1. Move the desired plugin binary into your Vault's configured `plugin_directory`:
 
 ```
 mv vault-plugin-secrets-cognito-<os>-<arch> <plugin_directory>/cognito
 ```
 
-2. If you downloaded it from releases then you may need to change the permissions
+2. If you downloaded it from releases then you may need to change the permissions:
 
 ```
 chmod u+x cognito 
 ```
 
-3. Register the plugin
+3. Register the plugin:
 
 Get the checksum from checksums.txt corresponding to downloaded release binary.
 
@@ -98,16 +98,34 @@ Or get it from the locally built binary, e.g `sha256sum <compiled_binary>`.
 Insert the checksum into the following command:
 
 ```
-vault write sys/plugins/catalog/secret/cognito \
-type=secret \
-sha256=<checksum> \
-command="cognito"
+vault plugin register \
+ -sha256=<SHA256 Hex value of the plugin binary> \
+ secret \
+ cognito
 ```
 
-4. Enable the secrets backend
+4. Enable the secrets backend:
 
 ```
 vault secrets enable -path=cognito cognito
+```
+
+## Upgrading the plugin
+
+1. Install the new version of the plugin as per the instructions above and reregister the plugin with the new checksum,
+   until this is done the plugin will be unavailable:
+
+```
+vault plugin register \
+ -sha256=<SHA256 Hex value of the plugin binary> \
+ secret \
+ cognito
+```
+
+2. Reload the plugin:
+
+```
+vault plugin reload -plugin=cognito
 ```
 
 # Usage
