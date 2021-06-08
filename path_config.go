@@ -3,7 +3,6 @@ package cognito
 import (
 	"context"
 	"errors"
-
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
@@ -18,6 +17,7 @@ const (
 // environments variable and system defaults being used.
 type cognitoConfig struct {
 	AwsAccessKeyId     string `json:"aws_access_key_id"`
+	AwsAssumeRoleArn   string `json:"aws_assume_role_arn"`
 	AwsSecretAccessKey string `json:"aws_secret_access_key"`
 	AwsSessionToken    string `json:"aws_session_token"`
 }
@@ -29,6 +29,10 @@ func pathConfig(b *cognitoSecretBackend) *framework.Path {
 			"aws_access_key_id": &framework.FieldSchema{
 				Type:        framework.TypeString,
 				Description: `The AWS access key for accessing the AWS API (Optional).`,
+			},
+			"aws_assume_role_arn": &framework.FieldSchema{
+				Type:        framework.TypeString,
+				Description: `An iam role to assume when accessing the AWS API (Optional).`,
 			},
 			"aws_secret_access_key": &framework.FieldSchema{
 				Type:        framework.TypeString,
@@ -67,6 +71,10 @@ func (b *cognitoSecretBackend) pathConfigWrite(ctx context.Context, req *logical
 
 	if awsAccessKeyId, ok := data.GetOk("aws_access_key_id"); ok {
 		config.AwsAccessKeyId = awsAccessKeyId.(string)
+	}
+
+	if awsAssumeRoleArn, ok := data.GetOk("aws_assume_role_arn"); ok {
+		config.AwsAssumeRoleArn = awsAssumeRoleArn.(string)
 	}
 
 	if awsSecretAccessKey, ok := data.GetOk("aws_secret_access_key"); ok {

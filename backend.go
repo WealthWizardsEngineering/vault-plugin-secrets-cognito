@@ -87,6 +87,7 @@ func (b *cognitoSecretBackend) getClient(ctx context.Context, req *logical.Reque
 	if config != nil {
 		c := &clientImpl{
 			AwsAccessKeyId:     config.AwsAccessKeyId,
+			AwsAssumeRoleArn:   config.AwsAssumeRoleArn,
 			AwsSecretAccessKey: config.AwsSecretAccessKey,
 			AwsSessionToken:    config.AwsSessionToken,
 		}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/errwrap"
@@ -24,6 +25,7 @@ type client interface {
 
 type clientImpl struct {
 	AwsAccessKeyId     string
+	AwsAssumeRoleArn   string
 	AwsSecretAccessKey string
 	AwsSessionToken    string
 }
@@ -35,14 +37,19 @@ func (c *clientImpl) deleteUser(region string, userPoolId string, username strin
 		creds := credentials.NewStaticCredentials(c.AwsAccessKeyId, c.AwsSecretAccessKey, c.AwsSessionToken)
 		config = config.WithCredentials(creds)
 	}
+
 	// Initial credentials loaded from SDK's default credential chain. Such as
 	// the environment, shared credentials (~/.aws/credentials), or EC2 Instance
 	// Role. These credentials will be used to to make the STS Assume Role API.
 	sess := session.Must(session.NewSession(config))
+	cognitoProviderConfig := aws.NewConfig().WithRegion(region)
 
-	// Create service client value configured for credentials
-	// from assumed role.
-	cognitoClient := cognitoidentityprovider.New(sess, &aws.Config{Region: aws.String(region)})
+	if c.AwsAssumeRoleArn != "" {
+		assumedRoleCreds := stscreds.NewCredentials(sess, c.AwsAssumeRoleArn)
+		cognitoProviderConfig = cognitoProviderConfig.WithCredentials(assumedRoleCreds)
+	}
+
+	cognitoClient := cognitoidentityprovider.New(sess, cognitoProviderConfig)
 	deleteUserData := &cognitoidentityprovider.AdminDeleteUserInput{
 		UserPoolId: aws.String(userPoolId),
 		Username:   aws.String(username),
@@ -93,10 +100,14 @@ func (c *clientImpl) getNewUser(region string, appClientId string, userPoolId st
 	// the environment, shared credentials (~/.aws/credentials), or EC2 Instance
 	// Role. These credentials will be used to to make the STS Assume Role API.
 	sess := session.Must(session.NewSession(config))
+	cognitoProviderConfig := aws.NewConfig().WithRegion(region)
 
-	// Create service client value configured for credentials
-	// from assumed role.
-	cognitoClient := cognitoidentityprovider.New(sess, &aws.Config{Region: aws.String(region)})
+	if c.AwsAssumeRoleArn != "" {
+		assumedRoleCreds := stscreds.NewCredentials(sess, c.AwsAssumeRoleArn)
+		cognitoProviderConfig = cognitoProviderConfig.WithCredentials(assumedRoleCreds)
+	}
+
+	cognitoClient := cognitoidentityprovider.New(sess, cognitoProviderConfig)
 
 	keyID, err := uuid.GenerateUUID()
 	if err != nil {
@@ -127,7 +138,6 @@ func (c *clientImpl) getNewUser(region string, appClientId string, userPoolId st
 	if err != nil {
 		return nil, errwrap.Wrapf("Could not create user: {{err}}", err)
 	}
-
 	addUserToGroupData := &cognitoidentityprovider.AdminAddUserToGroupInput{
 		GroupName:  aws.String(group),
 		UserPoolId: aws.String(userPoolId),

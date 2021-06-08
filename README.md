@@ -213,7 +213,19 @@ Where:
 
 * aws_access_key_id: The AWS access key to use
 * aws_secret_access_key: The AWS secret access key to use
-* aws_session_token: The AWS session token to use (if required)
+* aws_session_token: The AWS session token to use
+* aws_assume_role_arn: the full ARN of the IAM role to assume
+
+These are all optional, depending on how your Vault instance authenticates against AWS.
+
+`aws_assume_role_arn` defines an IAM role that can be assumed by this plugin; this can be either in addition to access
+keys or instead. There are a number of scenarios where this might be useful:
+
+* granularity of control - Vault may interact with AWS via another plugin, using a role reduces what this plugin can do
+* cross account access - Vault may need to interact with multiple AWS accounts, this can be achieved by enabling this
+  plugin multiple times, each with a different role set up to allow access to another account
+* ec2 instance role - Vault may be running on ec2 with an instance role, rather than the instance having full access to
+  everything required, it can assume a role that only allows this plugin to do what it needs to do
 
 ## Usage
 
